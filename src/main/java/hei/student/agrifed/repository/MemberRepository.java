@@ -69,4 +69,38 @@ public class MemberRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public void save(Member member) {
+        String memberSql = """
+                    insert into member (firstname, lastname, birthdate, gender, address, phone, profession, email, occupation)
+                    values (?,?,?,?,?,?,?,?,?);
+                """;
+        String refereesSql = """
+                    insert into reference (id_member_refered, id_member_referer)
+                    values (?,?);
+                """;
+        try {
+            PreparedStatement memberPs = connection.prepareStatement(memberSql);
+            memberPs.setString(1, member.getFirstName());
+            memberPs.setString(2, member.getLastName());
+            memberPs.setString(3, member.getBirthDate());
+            memberPs.setString(4, member.getGender().toString());
+            memberPs.setString(5, member.getAddress());
+            memberPs.setInt(6, member.getPhoneNumber());
+            memberPs.setString(7, member.getProfession());
+            memberPs.setString(8, member.getEmail());
+            memberPs.setString(9, member.getOccupation().toString());
+            memberPs.executeUpdate();
+
+            PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
+            for (String referee : member.getReferees()) {
+                refereesPs.setString(1, member.getId());
+                refereesPs.setString(2, referee);
+                refereesPs.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
