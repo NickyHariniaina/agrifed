@@ -1,6 +1,6 @@
 package hei.student.agrifed.entity;
 
-public enum Genre {
+public enum Gender {
     MALE,
     FEMALE
 }
