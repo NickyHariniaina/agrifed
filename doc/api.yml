@@ -1,9 +1,9 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
   title: Agricultural federation API
   description: |
     # Versioning
-    This API uses semantic versioning (MAJOR.MINOR.PATCH). Available versions are : 
+    This API uses semantic versioning (MAJOR.MINOR.PATCH). Available versions are :
     - v0.0.1 (2026-04-21) : POST /collectivities for collectivities creation and POST /members for members creation.
   version: 0.0.1
 servers:
@@ -13,7 +13,7 @@ paths:
     post:
       summary: Create list of collectivities
       description: |
-        During collectivity request body creation, only members ID are provided to identify members. 
+        During collectivity request body creation, only members ID are provided to identify members.
         But the response content includes members information, not only their IDs.
       requestBody:
         content:
@@ -56,7 +56,7 @@ paths:
                   $ref: '#/components/schemas/Member'
         400:
           description: |
-            The following case must return a bad request exception : 
+            The following case must return a bad request exception :
             - Member with bad referees or without proper payment.
             - Membership dues not paid or registration fee not paid.
         404:
