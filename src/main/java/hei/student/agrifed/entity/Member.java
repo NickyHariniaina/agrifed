@@ -20,5 +20,5 @@ public class Member {
     private Integer phoneNumber;
     private String email;
     private MemberOccupation occupation;
-    private List<Member> referees;
+    private List<String> referees;
 }
