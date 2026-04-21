@@ -22,26 +22,35 @@ public class MemberRepository {
 
     private Connection connection;
 
+    public List<String> findAllReferees(String id) {
+        String refereesSql = """
+                    select mc.id_member_refered from member_collectivity mc
+                    where mc.id_collectivity = ?
+                """;
+        List<String> referees = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(refereesSql);
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                referees.add(rs.getString("id_member_refered"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return referees;
+    }
+
     public Optional<Member> findById(String id) {
         String memberSql = """
                     select firstname, lastname, birthdate, gender, address, phone, profession, email, occupation
                     from member where id = ?
                 """;
-        String referencesSql = """
-                    select mc.id_member_refered from member_collectivity mc
-                    where mc.id_collectivity = ?";
-                """;
         Member member = new Member();
-        List<String> referees = new ArrayList<>();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setString(1, id);
             ResultSet memberRs = memberPs.executeQuery();
-
-            PreparedStatement referencesPs = connection.prepareStatement(referencesSql);
-            referencesPs.setString(1, id);
-            ResultSet referencesRs = referencesPs.executeQuery();
-
             if (memberRs.next()) {
                 member.setId(id);
                 member.setFirstName(memberRs.getString("firstname"));
@@ -53,19 +62,11 @@ public class MemberRepository {
                 member.setProfession(memberRs.getString("profession"));
                 member.setEmail(memberRs.getString("email"));
                 member.setOccupation(MemberOccupation.valueOf(memberRs.getString("occupation")));
-
-                while (referencesRs.next()) {
-                    referees.add(referencesRs.getString("id_member_refered"));
-                }
-                member.setReferees(referees);
-
                 return Optional.of(member);
             }
-
             return Optional.empty();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return Optional.empty();
     }
 }
