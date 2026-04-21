@@ -1,0 +1,21 @@
+create type gender as enum ('MALE', 'FEMALE');
+create type occupation as enum ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT');
+
+create table member {
+    id integer primary key,
+    firstname varchar(255) not null,
+    lastname varchar(255) not null,
+    birthdate date not null,
+    gender gender not null,
+    address varchar(255) not null,
+    phone integer not null,
+    profession varchar(255) not null,
+    email varchar(255) not null,
+    occupation occupation not null
+}
+
+create table reference {
+    id integer primary key,
+    id_member_refered integer not null references member(id),
+    id_member_referer integer not null references member(id),
+}
