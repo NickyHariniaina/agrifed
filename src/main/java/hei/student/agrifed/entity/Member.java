@@ -1,5 +1,7 @@
 package hei.student.agrifed.entity;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +20,5 @@ public class Member {
     private Integer phoneNumber;
     private String email;
     private MemberOccupation occupation;
+    private List<Member> referees;
 }
