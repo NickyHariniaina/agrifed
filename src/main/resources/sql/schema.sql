@@ -29,9 +29,6 @@ create table collectivity (
     secretary_id integer references member(id)
 );
 
-insert into collectivity (location, president_id, treasurer_id, vice_president_id, secretary_id)
-values ('Ambatondrazaka', 1, null, null, null);
-
 create table member_collectivity (
     id_member integer not null references member(id),
     id_collectivity integer not null references collectivity(id)
