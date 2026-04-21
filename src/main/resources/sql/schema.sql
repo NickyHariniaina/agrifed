@@ -19,3 +19,19 @@ create table reference {
     id_member_refered integer not null references member(id),
     id_member_referer integer not null references member(id),
 }
+
+create table collectivity {
+    id integer primary key,
+    location varchar(255) not null,
+    president_id integer not null references member(id),
+    treasurer_id integer not null references member(id),
+    vice_president_id integer not null references member(id),
+    secretary_id integer not null references member(id),
+}
+
+create table member_collectivity {
+    id integer primary key,
+    id_member integer not null references member(id),
+    id_collectivity integer not null references collectivity(id),
+}
+
