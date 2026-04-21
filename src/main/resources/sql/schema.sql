@@ -23,11 +23,14 @@ create table reference (
 create table collectivity (
     id serial primary key,
     location varchar(255) not null,
-    president_id integer not null references member(id),
-    treasurer_id integer not null references member(id),
-    vice_president_id integer not null references member(id),
-    secretary_id integer not null references member(id)
+    president_id integer references member(id),
+    treasurer_id integer references member(id),
+    vice_president_id integer references member(id),
+    secretary_id integer references member(id)
 );
+
+insert into collectivity (location, president_id, treasurer_id, vice_president_id, secretary_id)
+values ('Ambatondrazaka', 1, null, null, null);
 
 create table member_collectivity (
     id_member integer not null references member(id),
