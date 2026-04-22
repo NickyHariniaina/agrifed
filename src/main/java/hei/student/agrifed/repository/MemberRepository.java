@@ -80,6 +80,10 @@ public class MemberRepository {
                     insert into reference (id_member_refered, id_member_referer)
                     values (?,?) returning id_member_referer;
                 """;
+        String collectivitySql = """
+                    insert into member_collectivity (id_member, id_collectivity)
+                    values (?,?) returning id_member, id_collectivity;
+                """;
         Member memberToReturn = new Member();
 
         try {
@@ -117,6 +121,14 @@ public class MemberRepository {
                     memberToReturn.setReferees(new ArrayList<>());
                     memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
                 }
+            }
+
+            PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
+            collectivityPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
+            collectivityPs.setInt(2, Integer.parseInt(member.getCollectivityIdentifier()));
+            memberRs = collectivityPs.executeQuery();
+            if (memberRs.next()) {
+                memberToReturn.setCollectivityIdentifier(memberRs.getString("id_collectivity"));
             }
             return memberToReturn;
         } catch (SQLException e) {
