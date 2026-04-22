@@ -4,6 +4,7 @@ import java.util.List;
 
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
+import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.service.CollectivityService;
 
 import org.springframework.http.HttpStatus;
@@ -32,5 +33,17 @@ public class CollectivityController {
             @PathVariable Integer id,
             @RequestBody(required = false) AssignIdentityDto body) {
         return ResponseEntity.ok(collectivityService.assignIdentity(id, body));
+    }
+
+    @GetMapping("/{id}/membershipFees")
+    public ResponseEntity<?> findMembershipFeesById(
+            @PathVariable Integer id) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(collectivityService.findMembershipFeesById(id));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 }
