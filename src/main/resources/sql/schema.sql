@@ -55,3 +55,4 @@ create table membership_fee (
 );
 
 alter table membership_fee add column id_collectivity integer references collectivity(id);
+alter type freqency rename to frequency;
