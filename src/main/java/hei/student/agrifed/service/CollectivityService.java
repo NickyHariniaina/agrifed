@@ -1,12 +1,14 @@
 package hei.student.agrifed.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import hei.student.agrifed.entity.Collectivity;
-import hei.student.agrifed.entity.Frequency;
+import hei.student.agrifed.entity.CollectivityTransaction;
 import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
@@ -132,19 +134,32 @@ public class CollectivityService {
         }
         List<MembershipFee> memberFeesCreated = new ArrayList<>();
         for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
-            if (!createMembershipFeeDto.getFrequency().equals(Frequency.ANNUALLY)
-                && !createMembershipFeeDto.getFrequency().equals(Frequency.WEEKLY)
-                && !createMembershipFeeDto.getFrequency().equals(Frequency.MONTHLY)
-                && !createMembershipFeeDto.getFrequency().equals(Frequency.PUNCTUALLY)) {
-                throw new BadRequestException("Frequency should be either annually, weekly, monthly or punctually");
-            }
-            if (createMembershipFeeDto.getAmount() <= 0) {
-                throw new BadRequestException("Amount should not be equals to 0");
-            }
             MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
             memberFeesCreated.add(collectivityRepository.saveMembershipFee(id, memberFee));
 
         }
         return memberFeesCreated;
+    }
+
+    public List<CollectivityTransaction> findTransactions(Integer id, String fromStr, String toStr) {
+        if (fromStr == null || toStr == null)
+            throw new BadRequestException("Query parameters 'from' and 'to' are mandatory.");
+
+        LocalDate from;
+        LocalDate to;
+        try {
+            from = LocalDate.parse(fromStr);
+            to   = LocalDate.parse(toStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-01-01).");
+        }
+
+        if (from.isAfter(to))
+            throw new BadRequestException("'from' date must be before or equal to 'to' date.");
+
+        if (!collectivityRepository.existsById(id.toString()))
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+
+        return collectivityRepository.findTransactions(id, from, to);
     }
 }
