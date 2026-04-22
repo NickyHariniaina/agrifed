@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import hei.student.agrifed.entity.dto.CreateMemberDto;
 import hei.student.agrifed.exception.BadRequestException;
+import hei.student.agrifed.repository.MemberRepository;
 
 @Component
 public class MemberValidator {
@@ -17,6 +18,14 @@ public class MemberValidator {
         }
         if (createMemberDto.getReferees().size() < 1) {
             throw new BadRequestException("Referees must be at least 2");
+        }
+    }
+
+    public void checkReferees(CreateMemberDto createMemberDto, MemberRepository memberRepository) {
+        for (String referee : createMemberDto.getReferees()) {
+            if (!memberRepository.existsById(Integer.parseInt(referee))) {
+                throw new BadRequestException("Referee not found");
+            }
         }
     }
 }

@@ -18,11 +18,7 @@ public class MemberService {
     public void save(CreateMemberDto createMemberDto) {
         Member member = createMemberDto.toMember();
         memberValidator.checkCreateMemberDto(createMemberDto);
-        for (String referee : member.getReferees()) {
-            if (!memberRepository.existsById(Integer.parseInt(referee))) {
-                throw new RuntimeException("Referee not found");
-            }
-        }
+        memberValidator.checkReferees(createMemberDto, memberRepository);
         memberRepository.save(member);
     }
 
