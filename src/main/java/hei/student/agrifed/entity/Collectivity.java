@@ -4,10 +4,8 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
 @Data
 public class Collectivity {
     private String id;
@@ -16,4 +14,12 @@ public class Collectivity {
     private CollectivityStructure structure;
     private List<Member> members;
 
+    public Collectivity() {}
+
+    public Collectivity(String id, String location, CollectivityStructure structure, List<Member> members) {
+        this.id = id;
+        this.location = location;
+        this.structure = structure;
+        this.members = members;
+    }
 }
