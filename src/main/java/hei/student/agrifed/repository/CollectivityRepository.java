@@ -1,19 +1,12 @@
 package hei.student.agrifed.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import hei.student.agrifed.entity.ActivityStatus;
-import hei.student.agrifed.entity.Collectivity;
-import hei.student.agrifed.entity.CollectivityStructure;
-import hei.student.agrifed.entity.Frequency;
-import hei.student.agrifed.entity.Member;
-import hei.student.agrifed.entity.MembershipFee;
+import hei.student.agrifed.entity.*;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
 import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
@@ -286,4 +279,71 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public List<CollectivityTransaction> findTransactions(Integer collectivityId,
+                                                          LocalDate from, LocalDate to) {
+        String sql = """
+                SELECT ct.id, ct.creation_date, ct.amount, ct.payment_mode,
+                       ct.id_member, ct.id_financial_account,
+                       fa.account_type, fa.amount AS fa_amount,
+                       fa.holder_name, fa.mobile_banking_service, fa.mobile_number,
+                       fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                       fa.bank_account_number, fa.bank_account_key
+                FROM collectivity_transaction ct
+                JOIN financial_account fa ON fa.id = ct.id_financial_account
+                WHERE ct.id_collectivity = ?
+                  AND ct.creation_date >= ?
+                  AND ct.creation_date <= ?
+                ORDER BY ct.creation_date
+                """;
+
+        List<CollectivityTransaction> results = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ps.setDate(2, Date.valueOf(from));
+            ps.setDate(3, Date.valueOf(to));
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                // Financial account credited
+                FinancialAccount fa = new FinancialAccount();
+                fa.setId(rs.getInt("id_financial_account"));
+                fa.setAccountType(rs.getString("account_type"));
+                fa.setAmount(rs.getDouble("fa_amount"));
+                fa.setHolderName(rs.getString("holder_name"));
+                String mobileSvc = rs.getString("mobile_banking_service");
+                if (mobileSvc != null) fa.setMobileBankingService(MobileBankingService.valueOf(mobileSvc));
+
+                long mobileNum = rs.getLong("mobile_number");
+                if (!rs.wasNull()) fa.setMobileNumber(mobileNum);
+                String bank = rs.getString("bank_name");
+                if (bank != null) fa.setBankName(Bank.valueOf(bank));
+                int bankCode = rs.getInt("bank_code");
+                if (!rs.wasNull()) fa.setBankCode(bankCode);
+                int branchCode = rs.getInt("bank_branch_code");
+                if (!rs.wasNull()) fa.setBankBranchCode(branchCode);
+                long bankAccNum = rs.getLong("bank_account_number");
+                if (!rs.wasNull()) fa.setBankAccountNumber(bankAccNum);
+                int bankAccKey = rs.getInt("bank_account_key");
+                if (!rs.wasNull()) fa.setBankAccountKey(bankAccKey);
+
+                // Member debited
+                Member member = memberRepository.findById(rs.getString("id_member")).orElse(null);
+
+                results.add(CollectivityTransaction.builder()
+                        .id(rs.getInt("id"))
+                        .creationDate(rs.getDate("creation_date").toLocalDate())
+                        .amount(rs.getDouble("amount"))
+                        .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
+                        .accountCredited(fa)
+                        .memberDebited(member)
+                        .build());
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return results;
+    }
+
+
 }
