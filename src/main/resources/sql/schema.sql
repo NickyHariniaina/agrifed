@@ -31,6 +31,10 @@ create table collectivity (
 
 create table member_collectivity (
     id_member integer not null references member(id),
-    id_collectivity integer not null references collectivity(id)
+    id_collectivity integer not null references collectivity(id),
+
+    primary key (id_member, id_collectivity)
 );
+
+ALTER TABLE member ADD COLUMN joined_at TIMESTAMP NOT NULL DEFAULT NOW();
 
