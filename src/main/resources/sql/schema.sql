@@ -36,5 +36,7 @@ create table member_collectivity (
     primary key (id_member, id_collectivity)
 );
 
-ALTER TABLE member ADD COLUMN joined_at TIMESTAMP NOT NULL DEFAULT NOW();
-
+alter table member ADD COLUMN joined_at TIMESTAMP NOT NULL DEFAULT NOW();
+alter table collectivity
+    add column federation_number integer unique,
+    add column name varchar(255) unique
