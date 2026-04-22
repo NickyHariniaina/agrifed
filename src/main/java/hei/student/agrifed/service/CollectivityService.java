@@ -10,6 +10,7 @@ import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
+import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.BadRequestException;
 import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
@@ -122,5 +123,15 @@ public class CollectivityService {
             throw new NotFoundException("Collectivity not found with ID : " + id);
         }
         return collectivityRepository.findMembershipFeesById(id);
+    }
+
+    public List<MembershipFee> saveMembershipFees(List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+        List<MembershipFee> memberFeesCreated = new ArrayList<>();
+        for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
+            MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
+            memberFeesCreated.add(collectivityRepository.saveMembershipFee(memberFee));
+
+        }
+        return memberFeesCreated;
     }
 }
