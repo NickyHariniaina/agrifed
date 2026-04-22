@@ -118,7 +118,9 @@ public class CollectivityService {
     }
 
     public List<MembershipFee> findMembershipFeesById(Integer id) {
-        // check if collectivity exists
+        if (!collectivityRepository.existsById(id.toString())) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
         return collectivityRepository.findMembershipFeesById(id);
     }
 }
