@@ -27,8 +27,16 @@ public class CollectivityController {
     @PostMapping
     public ResponseEntity<?> createCollectivities(
             @RequestBody List<CreateCollectivityDto> body) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(collectivityService.createCollectivities(body));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(collectivityService.createCollectivities(body));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/informations")
