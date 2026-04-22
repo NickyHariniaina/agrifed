@@ -7,9 +7,11 @@ import lombok.Data;
 
 @AllArgsConstructor
 @Data
+
 public class Collectivity {
     private String id;
     private Integer federationNumber;
+    private String name;
     private String location;
     private CollectivityStructure structure;
     private List<Member> members;
