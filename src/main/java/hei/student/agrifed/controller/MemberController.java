@@ -6,6 +6,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import hei.student.agrifed.entity.Member;
 import hei.student.agrifed.entity.dto.CreateMemberDto;
@@ -14,7 +17,7 @@ import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.service.MemberService;
 import lombok.AllArgsConstructor;
 
-@Controller
+@RestController
 @AllArgsConstructor
 @RequestMapping("/members")
 public class MemberController {
@@ -22,9 +25,9 @@ public class MemberController {
     private MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<?> createMember(@RequestBody CreateMemberDto createMemberDto) {
+    public ResponseEntity<?> createMember(@RequestBody List<CreateMemberDto> createMemberDtos) {
         try {
-            Member member = memberService.save(createMemberDto);
+            List<Member> member = memberService.save(createMemberDtos);
             return ResponseEntity.status(HttpStatus.CREATED).body(member);
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

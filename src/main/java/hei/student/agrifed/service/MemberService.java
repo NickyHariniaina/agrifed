@@ -1,5 +1,8 @@
 package hei.student.agrifed.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import hei.student.agrifed.entity.Member;
@@ -17,12 +20,16 @@ public class MemberService {
     private CollectivityRepository collectivityRepository;
     private MemberValidator memberValidator;
 
-    public Member save(CreateMemberDto createMemberDto) {
-        Member member = createMemberDto.toMember();
-        memberValidator.checkCreateMemberDto(createMemberDto);
-        memberValidator.checkReferees(createMemberDto, memberRepository);
-        memberValidator.checkCollectivity(createMemberDto, collectivityRepository);
-        return memberRepository.save(member);
+    public List<Member >save(List<CreateMemberDto> createMemberDtos) {
+        List<Member> memberCreated = new ArrayList<>();
+        for (CreateMemberDto createMemberDto : createMemberDtos) {
+            Member member = createMemberDto.toMember();
+            memberValidator.checkCreateMemberDto(createMemberDto);
+            memberValidator.checkReferees(createMemberDto, memberRepository);
+            memberValidator.checkCollectivity(createMemberDto, collectivityRepository);
+            memberCreated.add(memberRepository.save(member));
+        }
+        return memberCreated;
     }
 
 }

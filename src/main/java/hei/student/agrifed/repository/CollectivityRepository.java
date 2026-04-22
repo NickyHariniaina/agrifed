@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import hei.student.agrifed.entity.Collectivity;
 import hei.student.agrifed.entity.CollectivityStructure;
@@ -46,7 +47,7 @@ public class CollectivityRepository {
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             for (int i = 0; i < memberIds.size(); i++) {
-                ps.setString(i + 1, memberIds.get(i));
+                ps.setInt(i + 1, Integer.parseInt(memberIds.get(i)));
             }
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getLong(1);
@@ -92,6 +93,99 @@ public class CollectivityRepository {
         }
     }
 
+    public Optional<Collectivity> findById(Integer id){
+        String sql = """
+                 SELECT c.id, c.federation_number, c.name, c.location,
+                       c.president_id, c.vice_president_id, c.treasurer_id, c.secretary_id
+                FROM collectivity c
+                WHERE c.id = ?
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return Optional.empty();
+
+            Collectivity c = new Collectivity();
+            c.setId(rs.getString("id"));
+            c.setFederationNumber(rs.getObject("federation_number") != null
+                    ? rs.getInt("federation_number") : null);
+            c.setName(rs.getString("name"));
+            c.setLocation(rs.getString("location"));
+
+            // Structure
+            CollectivityStructure structure = new CollectivityStructure(
+                    fetchMember(rs.getString("president_id"),      "Président"),
+                    fetchMember(rs.getString("vice_president_id"), "Vice-président"),
+                    fetchMember(rs.getString("treasurer_id"),      "Trésorier"),
+                    fetchMember(rs.getString("secretary_id"),      "Secrétaire")
+            );
+            c.setStructure(structure);
+
+            // Membres
+            c.setMembers(findMembersByCollectivityId(id));
+            return Optional.of(c);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public boolean existsByName(String name) {
+        String sql = "SELECT 1 FROM collectivity WHERE name = ?";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Collectivity assignIdentity(Integer id, Integer federationNumber, String name) {
+        String sql = """
+                UPDATE collectivity
+                SET federation_number = COALESCE(?, federation_number),
+                    name              = COALESCE(?, name)
+                WHERE id = ?
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            if (federationNumber != null) ps.setInt(1, federationNumber);
+            else ps.setNull(1, java.sql.Types.INTEGER);
+            if (name != null) ps.setString(2, name);
+            else ps.setNull(2, java.sql.Types.VARCHAR);
+            ps.setInt(3, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return findById(id).orElseThrow(() ->
+                new NotFoundException("Collectivity not found with id : " + id));
+    }
+
+
+    private List<Member> findMembersByCollectivityId(Integer collectivityId) {
+        String sql = """
+                SELECT m.id FROM member_collectivity mc
+                JOIN member m ON m.id = mc.id_member
+                WHERE mc.id_collectivity = ?
+                """;
+        List<Member> members = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                memberRepository.findById(rs.getString("id")).ifPresent(members::add);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return members;
+    }
+
     private Collectivity buildResponse(String collectivityId, CreateCollectivityDto dto) {
         CreateCollectivityStructureDto s = dto.getStructure();
         CollectivityStructure structure = new CollectivityStructure(
@@ -121,7 +215,7 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(collectivitySql);
-            ps.setString(1, id);
+            ps.setInt(1, Integer.parseInt(id));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt("c") > 0;
         } catch (SQLException e) {

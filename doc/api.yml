@@ -5,7 +5,8 @@ info:
     # Versioning
     This API uses semantic versioning (MAJOR.MINOR.PATCH). Available versions are :
     - v0.0.1 (2026-04-21) : POST /collectivities for collectivities creation and POST /members for members creation.
-  version: 0.0.1
+    - v0.0.2 (2026-04-22) : PATCH /collectivities/{id} for federation identity assignment (number and name).
+  version: 0.0.2
 servers:
   - url: 'https://localhost:8080'
 paths:
@@ -35,6 +36,42 @@ paths:
           description: Collectivity without federation approval or structure missing.
         404:
           description: Member not found.
+
+  '/collectivities/{id}':
+    patch:
+      summary: Assign federation identity to a collectivity
+      description: |
+        Allows the federation to assign a unique number and a unique name to an existing collectivity.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignCollectivityIdentity'
+      responses:
+        200:
+          description: Collectivity with its assigned identity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+        400:
+          description: Request body is missing or both fields are absent.
+        404:
+          description: Collectivity not found.
+        409:
+          description: |
+            Conflict. Possible causes :
+            - The federationNumber is already set and cannot be changed.
+            - The name is already set and cannot be changed.
+            - The name is already used by another collectivity.
+
   '/members':
     post:
       summary: Create list of members
@@ -61,8 +98,22 @@ paths:
             - Membership dues not paid or registration fee not paid.
         404:
           description: Either collectivity or member not found.
+
 components:
   schemas:
+    AssignCollectivityIdentity:
+      type: object
+      description: |
+        Payload sent by the federation to assign an identity to a collectivity.
+        At least one of the two fields must be provided.
+      properties:
+        federationNumber:
+          type: integer
+          description: Unique number attributed by the federation. Cannot be changed once set.
+        name:
+          type: string
+          description: Unique name attributed by the federation. Cannot be changed once set.
+
     CreateCollectivity:
       type: object
       properties:
@@ -77,6 +128,7 @@ components:
           type: boolean
         structure:
           $ref: '#/components/schemas/CreateCollectivityStructure'
+
     CreateCollectivityStructure:
       type: object
       properties:
@@ -88,6 +140,7 @@ components:
           $ref: '#/components/schemas/MemberIdentifier'
         secretary:
           $ref: '#/components/schemas/MemberIdentifier'
+
     CollectivityStructure:
       type: object
       properties:
@@ -99,11 +152,20 @@ components:
           $ref: '#/components/schemas/Member'
         secretary:
           $ref: '#/components/schemas/Member'
+
     Collectivity:
       type: object
       properties:
         id:
           type: string
+        federationNumber:
+          type: integer
+          nullable: true
+          description: Unique number assigned by the federation. Null until assigned.
+        name:
+          type: string
+          nullable: true
+          description: Unique name assigned by the federation. Null until assigned.
         location:
           type: string
         structure:
@@ -112,8 +174,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Member'
+
     MemberIdentifier:
       type: string
+
     CreateMember:
       type: object
       allOf:
@@ -129,6 +193,7 @@ components:
           type: boolean
         membershipDuesPaid:
           type: boolean
+
     MemberInformation:
       type: object
       properties:
@@ -146,11 +211,12 @@ components:
         profession:
           type: string
         phoneNumber:
-          type: int
+          type: integer
         email:
           type: string
         occupation:
           $ref: '#/components/schemas/MemberOccupation'
+
     Member:
       type: object
       allOf:
@@ -162,11 +228,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Member'
+
     Gender:
       type: string
       enum:
         - MALE
         - FEMALE
+
     MemberOccupation:
       type: string
       enum:

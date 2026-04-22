@@ -34,7 +34,7 @@ public class MemberRepository {
             ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                referees.add(rs.getString("id_member_refered"));
+                referees.add(String.valueOf(rs.getInt("id_member_refered")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -50,7 +50,7 @@ public class MemberRepository {
         Member member = new Member();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setString(1, id);
+            memberPs.setInt(1, Integer.parseInt(id));
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
                 member.setId(id);
@@ -74,7 +74,7 @@ public class MemberRepository {
     public Member save(Member member) {
         String memberSql = """
                     insert into member (firstname, lastname, birthdate, gender, address, phone, profession, email, occupation)
-                    values (?,?,?,?,?,?,?,?,?) returning firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
+                    values (?,?,?,?::gender,?,?,?,?,?::occupation) returning id, firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
                 """;
         String refereesSql = """
                     insert into reference (id_member_refered, id_member_referer)
@@ -86,7 +86,7 @@ public class MemberRepository {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setString(1, member.getFirstName());
             memberPs.setString(2, member.getLastName());
-            memberPs.setString(3, member.getBirthDate().toString());
+            memberPs.setObject(3, member.getBirthDate());
             memberPs.setString(4, member.getGender().toString());
             memberPs.setString(5, member.getAddress());
             memberPs.setInt(6, member.getPhoneNumber());
@@ -110,11 +110,12 @@ public class MemberRepository {
 
             PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
             for (String referee : member.getReferees()) {
-                refereesPs.setString(1, member.getId());
-                refereesPs.setString(2, referee);
+                refereesPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
+                refereesPs.setInt(2, Integer.parseInt(referee));
                 memberRs = refereesPs.executeQuery();
                 if (memberRs.next()) {
-                    memberToReturn.getReferees().add(memberRs.getString("id_member_referer"));
+                    memberToReturn.setReferees(new ArrayList<>());
+                    memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
                 }
             }
             return memberToReturn;
@@ -123,16 +124,16 @@ public class MemberRepository {
         }
     }
 
-    public Boolean existsById(Integer id) {
+    public Boolean existsById(String id) {
         String memberSql = """
-                    select count(id) from member where id = ?
+                    select count(id) as c from member where id = ?
                 """;
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setInt(1, id);
+            memberPs.setInt(1, Integer.parseInt(id));
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
-                return memberRs.getInt("count(*)") > 0;
+                return memberRs.getInt("c") > 0;
             }
             return false;
         } catch (SQLException e) {

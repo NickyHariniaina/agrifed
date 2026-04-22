@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Set;
 
 import hei.student.agrifed.entity.Collectivity;
+import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
 import hei.student.agrifed.exception.BadRequestException;
+import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.repository.CollectivityRepository;
 import hei.student.agrifed.repository.MemberRepository;
@@ -39,7 +41,6 @@ public class CollectivityService {
     }
 
     private Collectivity createOne(CreateCollectivityDto dto) {
-        // 400 en premier
         if (!Boolean.TRUE.equals(dto.getFederationApproval())) {
             throw new BadRequestException(
                     "Approval from federation is required");
@@ -85,5 +86,33 @@ public class CollectivityService {
         merged.add(s.getTreasurer());
         merged.add(s.getSecretary());
         return new ArrayList<>(merged);
+    }
+
+
+    public Collectivity assignIdentity(Integer id, AssignIdentityDto dto) {
+        if (dto == null || (dto.getFederationNumber() == null && dto.getName() == null)) {
+            throw new BadRequestException(
+                    "At least federationNumber or name must be provided.");
+
+        }
+
+        Collectivity existing = collectivityRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Community not found with ID : " + id));
+
+        if (dto.getFederationNumber() != null && existing.getFederationNumber() != null) {
+            throw new ConflictException(
+                    "The federal number is already defined and cannot be changed.");
+        }
+        if (dto.getName() != null && existing.getName() != null) {
+            throw new ConflictException(
+                    "The name is already defined and cannot be changed.");
+        }
+
+        if (dto.getName() != null && collectivityRepository.existsByName(dto.getName())) {
+            throw new ConflictException(
+                    "Name '" + dto.getName() + "' is already in use by another collectivity.");
+        }
+
+        return collectivityRepository.assignIdentity(id, dto.getFederationNumber(), dto.getName());
     }
 }
