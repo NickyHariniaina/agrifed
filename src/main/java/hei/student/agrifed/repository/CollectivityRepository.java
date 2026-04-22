@@ -61,10 +61,10 @@ public class CollectivityRepository {
         return 0;
     }
 
-    public MembershipFee saveMembershipFee(MembershipFee membershipFee) {
+    public MembershipFee saveMembershipFee(Integer id_collectivity, MembershipFee membershipFee) {
         String insertMembershipFeeSql = """
-                INSERT INTO membership_fee (eligible_from, frequency, amount, label, status)
-                VALUES (?, ?::frequency, ?, ?, ?::status)
+                INSERT INTO membership_fee (eligible_from, frequency, amount, label, status, id_collectivity)
+                VALUES (?, ?::frequency, ?, ?, ?::status, ?)
                 RETURNING id, eligible_from, frequency, amount, label, status;
                 """;
         try {
@@ -74,6 +74,7 @@ public class CollectivityRepository {
             ps.setDouble(3, membershipFee.getAmount());
             ps.setString(4, membershipFee.getLabel());
             ps.setString(5, membershipFee.getStatus().toString());
+            ps.setInt(6, id_collectivity);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -87,7 +88,6 @@ public class CollectivityRepository {
                 return membershipFeeToSave;
             }
             return null;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
