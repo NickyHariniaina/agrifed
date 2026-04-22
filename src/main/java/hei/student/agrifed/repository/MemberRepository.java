@@ -74,7 +74,7 @@ public class MemberRepository {
     public Member save(Member member) {
         String memberSql = """
                     insert into member (firstname, lastname, birthdate, gender, address, phone, profession, email, occupation)
-                    values (?,?,?,?::gender,?,?,?,?,?::occupation) returning firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
+                    values (?,?,?,?::gender,?,?,?,?,?::occupation) returning id, firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
                 """;
         String refereesSql = """
                     insert into reference (id_member_refered, id_member_referer)
@@ -114,7 +114,7 @@ public class MemberRepository {
                 refereesPs.setString(2, referee);
                 memberRs = refereesPs.executeQuery();
                 if (memberRs.next()) {
-                    memberToReturn.getReferees().add(memberRs.getString("id_member_referer"));
+                    memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
                 }
             }
             return memberToReturn;
