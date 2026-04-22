@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import hei.student.agrifed.entity.Collectivity;
+import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
@@ -114,5 +115,10 @@ public class CollectivityService {
         }
 
         return collectivityRepository.assignIdentity(id, dto.getFederationNumber(), dto.getName());
+    }
+
+    public List<MembershipFee> findMembershipFeesById(Integer id) {
+        // check if collectivity exists
+        return collectivityRepository.findMembershipFeesById(id);
     }
 }
