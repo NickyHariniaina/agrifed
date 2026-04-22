@@ -78,4 +78,15 @@ create table financial_account (
                                    bank_account_key      integer
 );
 
+create table member_payment (
+                                id                    serial primary key,
+                                id_member             integer        not null references member(id),
+                                id_membership_fee     integer        not null references membership_fee(id),
+                                id_financial_account  integer        not null references financial_account(id),
+                                amount                numeric(15, 2) not null,
+                                payment_mode          payment_mode   not null,
+                                creation_date         date           not null default current_date
+);
+
+
 
