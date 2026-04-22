@@ -71,15 +71,17 @@ public class MemberRepository {
         }
     }
 
-    public void save(Member member) {
+    public Member save(Member member) {
         String memberSql = """
                     insert into member (firstname, lastname, birthdate, gender, address, phone, profession, email, occupation)
-                    values (?,?,?,?,?,?,?,?,?);
+                    values (?,?,?,?,?,?,?,?,?) returning firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
                 """;
         String refereesSql = """
                     insert into reference (id_member_refered, id_member_referer)
-                    values (?,?);
+                    values (?,?) returning id_member_referer;
                 """;
+        Member memberToReturn = new Member();
+
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setString(1, member.getFirstName());
@@ -91,17 +93,51 @@ public class MemberRepository {
             memberPs.setString(7, member.getProfession());
             memberPs.setString(8, member.getEmail());
             memberPs.setString(9, member.getOccupation().toString());
-            memberPs.executeUpdate();
+            ResultSet memberRs = memberPs.executeQuery();
+
+            if (memberRs.next()) {
+                memberToReturn.setId(memberRs.getString("id"));
+                memberToReturn.setFirstName(memberRs.getString("firstname"));
+                memberToReturn.setLastName(memberRs.getString("lastname"));
+                memberToReturn.setBirthDate(LocalDate.parse(memberRs.getString("birthdate")));
+                memberToReturn.setGender(Gender.valueOf(memberRs.getString("gender")));
+                memberToReturn.setAddress(memberRs.getString("address"));
+                memberToReturn.setPhoneNumber(memberRs.getInt("phone"));
+                memberToReturn.setProfession(memberRs.getString("profession"));
+                memberToReturn.setEmail(memberRs.getString("email"));
+                memberToReturn.setOccupation(MemberOccupation.valueOf(memberRs.getString("occupation")));
+            }
 
             PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
             for (String referee : member.getReferees()) {
                 refereesPs.setString(1, member.getId());
                 refereesPs.setString(2, referee);
-                refereesPs.executeUpdate();
+                memberRs = refereesPs.executeQuery();
+                if (memberRs.next()) {
+                    memberToReturn.getReferees().add(memberRs.getString("id_member_referer"));
+                }
             }
-
+            return memberToReturn;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public Boolean existsById(Integer id) {
+        String memberSql = """
+                    select count(id) from member where id = ?
+                """;
+        try {
+            PreparedStatement memberPs = connection.prepareStatement(memberSql);
+            memberPs.setInt(1, id);
+            ResultSet memberRs = memberPs.executeQuery();
+            if (memberRs.next()) {
+                return memberRs.getInt("count(*)") > 0;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
