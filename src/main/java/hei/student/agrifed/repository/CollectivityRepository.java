@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import hei.student.agrifed.entity.ActivityStatus;
 import hei.student.agrifed.entity.Collectivity;
 import hei.student.agrifed.entity.CollectivityStructure;
+import hei.student.agrifed.entity.Frequency;
 import hei.student.agrifed.entity.Member;
+import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
 import hei.student.agrifed.exception.NotFoundException;
@@ -222,5 +225,32 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
         return false;
+    }
+
+    public List<MembershipFee> findMembershipFeesById(Integer id) {
+        String sql = """
+                SELECT id, eligible_from, frequency, amount, label, status
+                FROM membership_fee
+                WHERE id_collectivity = ?;
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            List<MembershipFee> fees = new ArrayList<>();
+            while (rs.next()) {
+                fees.add(MembershipFee.builder()
+                        .id(rs.getInt("id"))
+                        .eligibleFrom(rs.getDate("eligible_from").toLocalDate())
+                        .frequency(Frequency.valueOf(rs.getString("frequency")))
+                        .amount(rs.getDouble("amount"))
+                        .label(rs.getString("label"))
+                        .status(ActivityStatus.valueOf(rs.getString("status")))
+                        .build());
+            }
+            return fees;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
