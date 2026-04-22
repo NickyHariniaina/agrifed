@@ -30,7 +30,7 @@ public class CollectivityController {
                 .body(collectivityService.createCollectivities(body));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/informations")
     public ResponseEntity<?> assignIdentity(
             @PathVariable Integer id,
             @RequestBody(required = false) AssignIdentityDto body) {
