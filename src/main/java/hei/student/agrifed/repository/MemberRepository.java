@@ -44,7 +44,7 @@ public class MemberRepository {
 
     public Optional<Member> findById(String id) {
         String memberSql = """
-                    select firstname, lastname, birthdate, gender, address, phone, profession, email, occupation
+                    select firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at
                     from member where id = ?
                 """;
         Member member = new Member();
