@@ -39,4 +39,17 @@ create table member_collectivity (
 alter table member ADD COLUMN joined_at TIMESTAMP NOT NULL DEFAULT NOW();
 alter table collectivity
     add column federation_number integer unique,
-    add column name varchar(255) unique
+    add column name varchar(255) unique;
+
+create type freqency as enum ('WEEKLY', 'MONTHLY', 'ANNUALLY', 'PUNCTUALLY');
+
+create type status as enum ('ACTIVE', 'INACTIVE');
+
+create table membership_fee (
+    id serial primary key,
+    eligible_from date not null,
+    frequency freqency not null,
+    amount numeric(10,2) not null check (amount >= 0),
+    label varchar(255) not null,
+    status status not null
+)
