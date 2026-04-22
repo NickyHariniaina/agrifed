@@ -162,7 +162,7 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
         return findById(id).orElseThrow(() ->
-                new NotFoundException("Collectivité introuvable avec l'id : " + id));
+                new NotFoundException("Collectivity not found with id : " + id));
     }
 
 

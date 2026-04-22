@@ -92,24 +92,25 @@ public class CollectivityService {
     public Collectivity assignIdentity(Integer id, AssignIdentityDto dto) {
         if (dto == null || (dto.getFederationNumber() == null && dto.getName() == null)) {
             throw new BadRequestException(
-                    "Au moins federationNumber ou name doit être fourni.");
+                    "At least federationNumber or name must be provided.");
+
         }
 
         Collectivity existing = collectivityRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Collectivité introuvable avec l'id : " + id));
+                .orElseThrow(() -> new NotFoundException("Community not found with ID : " + id));
 
         if (dto.getFederationNumber() != null && existing.getFederationNumber() != null) {
             throw new ConflictException(
-                    "Le numéro fédéral est déjà défini et ne peut pas être modifié.");
+                    "The federal number is already defined and cannot be changed.");
         }
         if (dto.getName() != null && existing.getName() != null) {
             throw new ConflictException(
-                    "Le nom est déjà défini et ne peut pas être modifié.");
+                    "The name is already defined and cannot be changed.");
         }
 
         if (dto.getName() != null && collectivityRepository.existsByName(dto.getName())) {
             throw new ConflictException(
-                    "Le nom '" + dto.getName() + "' est déjà utilisé par une autre collectivité.");
+                    "Name '" + dto.getName() + "' is already in use by another collectivity.");
         }
 
         return collectivityRepository.assignIdentity(id, dto.getFederationNumber(), dto.getName());
