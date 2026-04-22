@@ -229,7 +229,12 @@ public class CollectivityRepository {
             members.add(fetchMember(memberId, "Member"));
         }
 
-        return new Collectivity(collectivityId, dto.getLocation(), structure, members);
+        return Collectivity.builder()
+                .id(collectivityId)
+                .location(dto.getLocation())
+                .structure(structure)
+                .members(members)
+                .build();
     }
 
     private Member fetchMember(String id, String role) {
