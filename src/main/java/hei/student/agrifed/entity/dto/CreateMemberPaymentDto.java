@@ -4,5 +4,6 @@ import hei.student.agrifed.entity.PaymentMode;
 
 public class CreateMemberPaymentDto {
     private Double      amount;
+    private String      membershipFeeIdentifier;
     private PaymentMode paymentMode;
 }
