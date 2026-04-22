@@ -22,6 +22,17 @@ public class MemberPaymentService {
         this.memberRepository        = memberRepository;
     }
 
+    public List<MemberPayment> createPayments(String memberId, List<CreateMemberPaymentDto> dtos) {
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException("Member not found with id : " + memberId));
+
+        List<MemberPayment> created = new ArrayList<>();
+        for (CreateMemberPaymentDto dto : dtos) {
+            created.add(createOne(Integer.parseInt(memberId), dto));
+        }
+        return created;
+    }
+
 
     private MemberPayment createOne(Integer memberId, CreateMemberPaymentDto dto) {
         if (dto.getAmount() == null || dto.getAmount() <= 0) {
