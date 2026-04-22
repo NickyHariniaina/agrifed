@@ -1,5 +1,6 @@
 package hei.student.agrifed.utils;
 
+import hei.student.agrifed.entity.Member;
 import org.springframework.stereotype.Component;
 
 import hei.student.agrifed.entity.dto.CreateMemberDto;
@@ -24,10 +25,19 @@ public class MemberValidator {
     }
 
     public void checkReferees(CreateMemberDto createMemberDto, MemberRepository memberRepository) {
+        boolean containsOneRefereeComingFromSameCollectivity = false;
         for (String referee : createMemberDto.getReferees()) {
             if (!memberRepository.existsById(referee)) {
                 throw new NotFoundException("Member not found");
+            } else {
+                Member referees = memberRepository.findById(referee).get();
+                if (referees.getCollectivityIdentifier().equals(createMemberDto.getCollectivityIdentifier())) {
+                    containsOneRefereeComingFromSameCollectivity = true;
+                }
             }
+        }
+        if (!containsOneRefereeComingFromSameCollectivity) {
+            throw new BadRequestException("At least one Referees must come from the same collectivity");
         }
     }
 

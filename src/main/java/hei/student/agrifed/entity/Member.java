@@ -23,4 +23,5 @@ public class Member {
     private MemberOccupation occupation;
     private List<String> referees;
     private LocalDate joinedAt;
+    private String collectivityIdentifier;
 }
