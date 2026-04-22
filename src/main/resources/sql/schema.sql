@@ -52,4 +52,6 @@ create table membership_fee (
     amount numeric(10,2) not null check (amount >= 0),
     label varchar(255) not null,
     status status not null
-)
+);
+
+alter table membership_fee add column id_collectivity integer references collectivity(id);

@@ -8,11 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import hei.student.agrifed.entity.ActivityStatus;
 import hei.student.agrifed.entity.Collectivity;
 import hei.student.agrifed.entity.CollectivityStructure;
+import hei.student.agrifed.entity.Frequency;
 import hei.student.agrifed.entity.Member;
+import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
+import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.NotFoundException;
 
 import org.springframework.stereotype.Repository;
@@ -55,6 +59,38 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
         return 0;
+    }
+
+    public MembershipFee saveMembershipFee(Integer id_collectivity, MembershipFee membershipFee) {
+        String insertMembershipFeeSql = """
+                INSERT INTO membership_fee (eligible_from, frequency, amount, label, status, id_collectivity)
+                VALUES (?, ?::frequency, ?, ?, ?::status, ?)
+                RETURNING id, eligible_from, frequency, amount, label, status;
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(insertMembershipFeeSql);
+            ps.setObject(1, membershipFee.getEligibleFrom());
+            ps.setString(2, membershipFee.getFrequency().toString());
+            ps.setDouble(3, membershipFee.getAmount());
+            ps.setString(4, membershipFee.getLabel());
+            ps.setString(5, membershipFee.getStatus().toString());
+            ps.setInt(6, id_collectivity);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                MembershipFee membershipFeeToSave = new MembershipFee();
+                membershipFeeToSave.setId(rs.getInt("id"));
+                membershipFeeToSave.setEligibleFrom(rs.getDate("eligible_from").toLocalDate());
+                membershipFeeToSave.setFrequency(Frequency.valueOf(rs.getString("frequency")));
+                membershipFeeToSave.setAmount(rs.getDouble("amount"));
+                membershipFeeToSave.setLabel(rs.getString("label"));
+                membershipFeeToSave.setStatus(ActivityStatus.valueOf(rs.getString("status")));
+                return membershipFeeToSave;
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Collectivity save(CreateCollectivityDto dto) {
@@ -222,5 +258,32 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
         return false;
+    }
+
+    public List<MembershipFee> findMembershipFeesById(Integer id) {
+        String sql = """
+                SELECT id, eligible_from, frequency, amount, label, status
+                FROM membership_fee
+                WHERE id_collectivity = ?;
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            List<MembershipFee> fees = new ArrayList<>();
+            while (rs.next()) {
+                fees.add(MembershipFee.builder()
+                        .id(rs.getInt("id"))
+                        .eligibleFrom(rs.getDate("eligible_from").toLocalDate())
+                        .frequency(Frequency.valueOf(rs.getString("frequency")))
+                        .amount(rs.getDouble("amount"))
+                        .label(rs.getString("label"))
+                        .status(ActivityStatus.valueOf(rs.getString("status")))
+                        .build());
+            }
+            return fees;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
