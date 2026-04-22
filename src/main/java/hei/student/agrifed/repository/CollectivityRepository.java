@@ -61,13 +61,12 @@ public class CollectivityRepository {
         return 0;
     }
 
-    public List<MembershipFee> saveMembershipFees(MembershipFee membershipFee) {
+    public MembershipFee saveMembershipFee(MembershipFee membershipFee) {
         String insertMembershipFeeSql = """
                 INSERT INTO membership_fee (eligible_from, frequency, amount, label, status)
                 VALUES (?, ?::frequency, ?, ?, ?::status)
                 RETURNING id, eligible_from, frequency, amount, label, status;
                 """;
-        List<MembershipFee> membershipFees = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(insertMembershipFeeSql);
             ps.setObject(1, membershipFee.getEligibleFrom());
@@ -77,17 +76,18 @@ public class CollectivityRepository {
             ps.setString(5, membershipFee.getStatus().toString());
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
-                membershipFees.add(MembershipFee.builder()
-                        .id(rs.getInt("id"))
-                        .eligibleFrom(rs.getDate("eligible_from").toLocalDate())
-                        .frequency(Frequency.valueOf(rs.getString("frequency")))
-                        .amount(rs.getDouble("amount"))
-                        .label(rs.getString("label"))
-                        .status(ActivityStatus.valueOf(rs.getString("status")))
-                        .build());
+            if (rs.next()) {
+                MembershipFee membershipFeeToSave = new MembershipFee();
+                membershipFeeToSave.setId(rs.getInt("id"));
+                membershipFeeToSave.setEligibleFrom(rs.getDate("eligible_from").toLocalDate());
+                membershipFeeToSave.setFrequency(Frequency.valueOf(rs.getString("frequency")));
+                membershipFeeToSave.setAmount(rs.getDouble("amount"));
+                membershipFeeToSave.setLabel(rs.getString("label"));
+                membershipFeeToSave.setStatus(ActivityStatus.valueOf(rs.getString("status")));
+                return membershipFeeToSave;
             }
-            return membershipFees;
+            return null;
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
