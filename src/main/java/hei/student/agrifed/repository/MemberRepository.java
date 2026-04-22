@@ -132,7 +132,7 @@ public class MemberRepository {
             memberPs.setInt(1, id);
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
-                return memberRs.getInt("count(*)") > 0;
+                return memberRs.getInt("count(id)") > 0;
             }
             return false;
         } catch (SQLException e) {
