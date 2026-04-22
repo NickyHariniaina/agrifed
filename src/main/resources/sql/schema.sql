@@ -56,3 +56,8 @@ create table membership_fee (
 
 alter table membership_fee add column id_collectivity integer references collectivity(id);
 alter type freqency rename to frequency;
+
+create type payment_mode          as enum ('CASH', 'MOBILE_BANKING', 'BANK_TRANSFER');
+create type account_type          as enum ('CASH', 'MOBILE_BANKING', 'BANK');
+create type mobile_banking_service as enum ('AIRTEL_MONEY', 'MVOLA', 'ORANGE_MONEY');
+create type bank_name             as enum ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BAQUE', 'BAOBAB', 'SIPEM');
