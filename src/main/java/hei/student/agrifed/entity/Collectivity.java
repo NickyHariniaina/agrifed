@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class Collectivity {
     private String id;
+    private Integer federationNumber;
     private String location;
     private CollectivityStructure structure;
     private List<Member> members;
