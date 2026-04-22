@@ -113,4 +113,20 @@ public class CollectivityRepository {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(role + " not found with the id : " + id));
     }
+
+    public Boolean existsById(String id) {
+        String collectivitySql = """
+                SELECT COUNT(id) as c FROM collectivity
+                WHERE id = ?
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(collectivitySql);
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("c") > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
 }
