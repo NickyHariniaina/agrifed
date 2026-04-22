@@ -1,6 +1,7 @@
 package hei.student.agrifed.entity.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import hei.student.agrifed.entity.Gender;
 import hei.student.agrifed.entity.MemberOccupation;
@@ -22,7 +23,7 @@ public class CreateMemberDto {
     private String email;
     private MemberOccupation occupation;
     private String collectivityIdentifier;
-    private String[] referees;
+    private List<String> referees;
     private Boolean registrationFeePaid;
     private Boolean membershipDuesPaid;
 }

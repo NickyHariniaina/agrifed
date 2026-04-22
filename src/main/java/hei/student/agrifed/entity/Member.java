@@ -1,5 +1,6 @@
 package hei.student.agrifed.entity;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ public class Member {
     private String id;
     private String firstName;
     private String lastName;
-    private String birthDate;
+    private LocalDate birthDate;
     private Gender gender;
     private String address;
     private String profession;
