@@ -6,6 +6,7 @@ import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.BadRequestException;
+import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.service.CollectivityService;
 
@@ -30,11 +31,22 @@ public class CollectivityController {
                 .body(collectivityService.createCollectivities(body));
     }
 
-    @PatchMapping("/{id}/informations")
+    @PutMapping("/{id}/informations")
     public ResponseEntity<?> assignIdentity(
             @PathVariable Integer id,
             @RequestBody(required = false) AssignIdentityDto body) {
-        return ResponseEntity.ok(collectivityService.assignIdentity(id, body));
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(collectivityService.assignIdentity(id, body));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (ConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}/membershipFees")
