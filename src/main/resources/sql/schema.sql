@@ -61,3 +61,21 @@ create type payment_mode          as enum ('CASH', 'MOBILE_BANKING', 'BANK_TRANS
 create type account_type          as enum ('CASH', 'MOBILE_BANKING', 'BANK');
 create type mobile_banking_service as enum ('AIRTEL_MONEY', 'MVOLA', 'ORANGE_MONEY');
 create type bank_name             as enum ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BAQUE', 'BAOBAB', 'SIPEM');
+
+create table financial_account (
+                                   id                    serial primary key,
+                                   account_type          account_type    not null,
+                                   amount                numeric(15, 2)  not null default 0,
+
+                                   holder_name           varchar(255),
+                                   mobile_banking_service mobile_banking_service,
+                                   mobile_number         bigint,
+
+                                   bank_name             bank_name,
+                                   bank_code             integer,
+                                   bank_branch_code      integer,
+                                   bank_account_number   bigint,
+                                   bank_account_key      integer
+);
+
+
