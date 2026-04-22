@@ -47,7 +47,7 @@ public class CollectivityRepository {
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             for (int i = 0; i < memberIds.size(); i++) {
-                ps.setString(i + 1, memberIds.get(i));
+                ps.setInt(i + 1, Integer.parseInt(memberIds.get(i)));
             }
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getLong(1);

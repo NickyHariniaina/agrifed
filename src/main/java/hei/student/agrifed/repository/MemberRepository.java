@@ -50,7 +50,7 @@ public class MemberRepository {
         Member member = new Member();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setString(1, id);
+            memberPs.setInt(1, Integer.parseInt(id));
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
                 member.setId(id);
@@ -114,6 +114,7 @@ public class MemberRepository {
                 refereesPs.setInt(2, Integer.parseInt(referee));
                 memberRs = refereesPs.executeQuery();
                 if (memberRs.next()) {
+                    memberToReturn.setReferees(new ArrayList<>());
                     memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
                 }
             }
