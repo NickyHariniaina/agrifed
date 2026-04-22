@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import hei.student.agrifed.entity.Collectivity;
+import hei.student.agrifed.entity.Frequency;
 import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
@@ -131,6 +132,15 @@ public class CollectivityService {
         }
         List<MembershipFee> memberFeesCreated = new ArrayList<>();
         for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
+            if (!createMembershipFeeDto.getFrequency().equals(Frequency.ANNUALLY)
+                && !createMembershipFeeDto.getFrequency().equals(Frequency.WEEKLY)
+                && !createMembershipFeeDto.getFrequency().equals(Frequency.MONTHLY)
+                && !createMembershipFeeDto.getFrequency().equals(Frequency.PUNCTUALLY)) {
+                throw new BadRequestException("Frequency should be either annually, weekly, monthly or punctually");
+            }
+            if (createMembershipFeeDto.getAmount() <= 0) {
+                throw new BadRequestException("Amount should not be equals to 0");
+            }
             MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
             memberFeesCreated.add(collectivityRepository.saveMembershipFee(id, memberFee));
 
