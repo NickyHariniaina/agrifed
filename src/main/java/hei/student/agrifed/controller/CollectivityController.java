@@ -4,6 +4,8 @@ import java.util.List;
 
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
+import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
+import hei.student.agrifed.exception.BadRequestException;
 import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.service.CollectivityService;
 
@@ -40,6 +42,22 @@ public class CollectivityController {
             @PathVariable Integer id) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(collectivityService.findMembershipFeesById(id));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/membershipFees")
+    public ResponseEntity<?> createMembershipFees(
+            @PathVariable Integer id,
+            @RequestBody List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(collectivityService.saveMembershipFees(id, createMembershipFeeDtos));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {

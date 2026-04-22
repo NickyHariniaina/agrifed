@@ -125,11 +125,11 @@ public class CollectivityService {
         return collectivityRepository.findMembershipFeesById(id);
     }
 
-    public List<MembershipFee> saveMembershipFees(List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+    public List<MembershipFee> saveMembershipFees(Integer id, List<CreateMembershipFeeDto> createMembershipFeeDtos) {
         List<MembershipFee> memberFeesCreated = new ArrayList<>();
         for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
             MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
-            memberFeesCreated.add(collectivityRepository.saveMembershipFee(memberFee));
+            memberFeesCreated.add(collectivityRepository.saveMembershipFee(id, memberFee));
 
         }
         return memberFeesCreated;
