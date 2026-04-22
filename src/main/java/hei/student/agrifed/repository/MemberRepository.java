@@ -125,14 +125,14 @@ public class MemberRepository {
 
     public Boolean existsById(Integer id) {
         String memberSql = """
-                    select count(id) from member where id = ?
+                    select count(id) as c from member where id = ?
                 """;
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setInt(1, id);
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
-                return memberRs.getInt("count(id)") > 0;
+                return memberRs.getInt("c") > 0;
             }
             return false;
         } catch (SQLException e) {
