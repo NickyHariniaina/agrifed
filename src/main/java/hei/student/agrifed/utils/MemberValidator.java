@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import hei.student.agrifed.entity.dto.CreateMemberDto;
 import hei.student.agrifed.exception.BadRequestException;
+import hei.student.agrifed.exception.NotFoundException;
+import hei.student.agrifed.repository.CollectivityRepository;
 import hei.student.agrifed.repository.MemberRepository;
 
 @Component
@@ -24,8 +26,14 @@ public class MemberValidator {
     public void checkReferees(CreateMemberDto createMemberDto, MemberRepository memberRepository) {
         for (String referee : createMemberDto.getReferees()) {
             if (!memberRepository.existsById(Integer.parseInt(referee))) {
-                throw new BadRequestException("Referee not found");
+                throw new NotFoundException("Member not found");
             }
+        }
+    }
+
+    public void checkCollectivity(CreateMemberDto createMemberDto, CollectivityRepository collectivityRepository) {
+        if (!collectivityRepository.existsById(createMemberDto.getCollectivityIdentifier())) {
+            throw new NotFoundException("Collectivity not found");
         }
     }
 }
