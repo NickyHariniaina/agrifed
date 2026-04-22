@@ -104,4 +104,22 @@ public class MemberRepository {
             throw new RuntimeException(e);
         }
     }
+
+    private Boolean existsById(Integer id) {
+        String memberSql = """
+                    select count(id) from member where id = ?
+                """;
+        try {
+            PreparedStatement memberPs = connection.prepareStatement(memberSql);
+            memberPs.setInt(1, id);
+            ResultSet memberRs = memberPs.executeQuery();
+            if (memberRs.next()) {
+                return memberRs.getInt("count(*)") > 0;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

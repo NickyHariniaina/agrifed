@@ -20,4 +20,5 @@ public class MemberService {
         memberValidator.checkCreateMemberDto(createMemberDto);
         memberRepository.save(member);
     }
+
 }
