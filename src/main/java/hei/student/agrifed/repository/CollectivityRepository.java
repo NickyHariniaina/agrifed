@@ -16,6 +16,7 @@ import hei.student.agrifed.entity.Member;
 import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
+import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.NotFoundException;
 
 import org.springframework.stereotype.Repository;
@@ -58,6 +59,38 @@ public class CollectivityRepository {
             throw new RuntimeException(e);
         }
         return 0;
+    }
+
+    public List<MembershipFee> saveMembershipFees(MembershipFee membershipFee) {
+        String insertMembershipFeeSql = """
+                INSERT INTO membership_fee (eligible_from, frequency, amount, label, status)
+                VALUES (?, ?::frequency, ?, ?, ?::status)
+                RETURNING id, eligible_from, frequency, amount, label, status;
+                """;
+        List<MembershipFee> membershipFees = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(insertMembershipFeeSql);
+            ps.setObject(1, membershipFee.getEligibleFrom());
+            ps.setString(2, membershipFee.getFrequency().toString());
+            ps.setDouble(3, membershipFee.getAmount());
+            ps.setString(4, membershipFee.getLabel());
+            ps.setString(5, membershipFee.getStatus().toString());
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                membershipFees.add(MembershipFee.builder()
+                        .id(rs.getInt("id"))
+                        .eligibleFrom(rs.getDate("eligible_from").toLocalDate())
+                        .frequency(Frequency.valueOf(rs.getString("frequency")))
+                        .amount(rs.getDouble("amount"))
+                        .label(rs.getString("label"))
+                        .status(ActivityStatus.valueOf(rs.getString("status")))
+                        .build());
+            }
+            return membershipFees;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Collectivity save(CreateCollectivityDto dto) {
