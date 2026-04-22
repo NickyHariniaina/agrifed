@@ -105,7 +105,7 @@ public class MemberRepository {
         }
     }
 
-    private Boolean existsById(Integer id) {
+    public Boolean existsById(Integer id) {
         String memberSql = """
                     select count(id) from member where id = ?
                 """;
