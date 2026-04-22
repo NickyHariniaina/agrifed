@@ -126,6 +126,9 @@ public class CollectivityService {
     }
 
     public List<MembershipFee> saveMembershipFees(Integer id, List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+        if (!collectivityRepository.existsById(id.toString())) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
         List<MembershipFee> memberFeesCreated = new ArrayList<>();
         for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
             MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
