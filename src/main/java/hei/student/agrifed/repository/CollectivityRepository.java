@@ -121,7 +121,7 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(collectivitySql);
-            ps.setString(1, id);
+            ps.setInt(1, Integer.parseInt(id));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt("c") > 0;
         } catch (SQLException e) {

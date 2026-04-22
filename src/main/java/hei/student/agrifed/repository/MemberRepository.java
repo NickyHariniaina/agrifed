@@ -86,7 +86,7 @@ public class MemberRepository {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setString(1, member.getFirstName());
             memberPs.setString(2, member.getLastName());
-            memberPs.setString(3, member.getBirthDate().toString());
+            memberPs.setObject(3, member.getBirthDate());
             memberPs.setString(4, member.getGender().toString());
             memberPs.setString(5, member.getAddress());
             memberPs.setInt(6, member.getPhoneNumber());
