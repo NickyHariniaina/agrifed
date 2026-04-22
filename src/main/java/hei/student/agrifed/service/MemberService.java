@@ -15,11 +15,11 @@ public class MemberService {
     private MemberRepository memberRepository;
     private MemberValidator memberValidator;
 
-    public void save(CreateMemberDto createMemberDto) {
+    public Member save(CreateMemberDto createMemberDto) {
         Member member = createMemberDto.toMember();
         memberValidator.checkCreateMemberDto(createMemberDto);
         memberValidator.checkReferees(createMemberDto, memberRepository);
-        memberRepository.save(member);
+        return memberRepository.save(member);
     }
 
 }
