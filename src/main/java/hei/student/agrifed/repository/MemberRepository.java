@@ -34,7 +34,7 @@ public class MemberRepository {
             ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                referees.add(rs.getString("id_member_refered"));
+                referees.add(String.valueOf(rs.getInt("id_member_refered")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -110,8 +110,8 @@ public class MemberRepository {
 
             PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
             for (String referee : member.getReferees()) {
-                refereesPs.setString(1, member.getId());
-                refereesPs.setString(2, referee);
+                refereesPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
+                refereesPs.setInt(2, Integer.parseInt(referee));
                 memberRs = refereesPs.executeQuery();
                 if (memberRs.next()) {
                     memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
