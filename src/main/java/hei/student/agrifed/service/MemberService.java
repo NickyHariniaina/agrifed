@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import hei.student.agrifed.entity.Member;
 import hei.student.agrifed.entity.dto.CreateMemberDto;
 import hei.student.agrifed.repository.MemberRepository;
+import hei.student.agrifed.utils.MemberValidator;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -12,10 +13,11 @@ import lombok.AllArgsConstructor;
 public class MemberService {
 
     private MemberRepository memberRepository;
+    private MemberValidator memberValidator;
 
     public void save(CreateMemberDto createMemberDto) {
         Member member = createMemberDto.toMember();
-        // check create member validity
+        memberValidator.checkCreateMemberDto(createMemberDto);
         memberRepository.save(member);
     }
 }
