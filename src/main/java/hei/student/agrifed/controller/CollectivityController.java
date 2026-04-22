@@ -76,4 +76,20 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<?> findTransactions(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        try {
+            return ResponseEntity.ok(collectivityService.findTransactions(id, from, to));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 }
