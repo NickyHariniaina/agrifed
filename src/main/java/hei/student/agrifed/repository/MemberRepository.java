@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 
 import hei.student.agrifed.entity.Gender;
 import hei.student.agrifed.entity.Member;
@@ -55,7 +56,7 @@ public class MemberRepository {
                 member.setId(id);
                 member.setFirstName(memberRs.getString("firstname"));
                 member.setLastName(memberRs.getString("lastname"));
-                member.setBirthDate(memberRs.getString("birthdate"));
+                member.setBirthDate(LocalDate.parse(memberRs.getString("birthdate")));
                 member.setGender(Gender.valueOf(memberRs.getString("gender")));
                 member.setAddress(memberRs.getString("address"));
                 member.setPhoneNumber(memberRs.getInt("phone"));
@@ -83,7 +84,7 @@ public class MemberRepository {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setString(1, member.getFirstName());
             memberPs.setString(2, member.getLastName());
-            memberPs.setString(3, member.getBirthDate());
+            memberPs.setString(3, member.getBirthDate().toString());
             memberPs.setString(4, member.getGender().toString());
             memberPs.setString(5, member.getAddress());
             memberPs.setInt(6, member.getPhoneNumber());
