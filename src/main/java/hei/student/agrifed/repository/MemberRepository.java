@@ -47,11 +47,18 @@ public class MemberRepository {
                     select firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at
                     from member where id = ?
                 """;
+        String collectivitySql = """
+                    select id_collectivity from member_collectivity where id_member = ?
+                """;
         Member member = new Member();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
             memberPs.setInt(1, Integer.parseInt(id));
             ResultSet memberRs = memberPs.executeQuery();
+
+            PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
+            collectivityPs.setInt(1, Integer.parseInt(id));
+            ResultSet collectivityRs = collectivityPs.executeQuery();
             if (memberRs.next()) {
                 member.setId(id);
                 member.setFirstName(memberRs.getString("firstname"));
@@ -63,6 +70,9 @@ public class MemberRepository {
                 member.setProfession(memberRs.getString("profession"));
                 member.setEmail(memberRs.getString("email"));
                 member.setOccupation(MemberOccupation.valueOf(memberRs.getString("occupation")));
+                if (collectivityRs.next()) {
+                    member.setCollectivityIdentifier(collectivityRs.getString("id_collectivity"));
+                }
                 return Optional.of(member);
             }
             return Optional.empty();
@@ -79,6 +89,10 @@ public class MemberRepository {
         String refereesSql = """
                     insert into reference (id_member_refered, id_member_referer)
                     values (?,?) returning id_member_referer;
+                """;
+        String collectivitySql = """
+                    insert into member_collectivity (id_member, id_collectivity)
+                    values (?,?) returning id_member, id_collectivity;
                 """;
         Member memberToReturn = new Member();
 
@@ -117,6 +131,14 @@ public class MemberRepository {
                     memberToReturn.setReferees(new ArrayList<>());
                     memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
                 }
+            }
+
+            PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
+            collectivityPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
+            collectivityPs.setInt(2, Integer.parseInt(member.getCollectivityIdentifier()));
+            ResultSet collectivityRs = collectivityPs.executeQuery();
+            if (collectivityRs.next()) {
+                memberToReturn.setCollectivityIdentifier(collectivityRs.getString("id_collectivity"));
             }
             return memberToReturn;
         } catch (SQLException e) {
