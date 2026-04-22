@@ -88,5 +88,14 @@ create table member_payment (
                                 creation_date         date           not null default current_date
 );
 
+create table collectivity_transaction (
+                                          id                    serial primary key,
+                                          id_collectivity       integer        not null references collectivity(id),
+                                          id_member             integer        not null references member(id),
+                                          id_financial_account  integer        not null references financial_account(id),
+                                          amount                numeric(15, 2) not null,
+                                          payment_mode          payment_mode   not null,
+                                          creation_date         date           not null default current_date
+);
 
 
