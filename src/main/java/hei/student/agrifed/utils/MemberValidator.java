@@ -25,7 +25,7 @@ public class MemberValidator {
 
     public void checkReferees(CreateMemberDto createMemberDto, MemberRepository memberRepository) {
         for (String referee : createMemberDto.getReferees()) {
-            if (!memberRepository.existsById(Integer.parseInt(referee))) {
+            if (!memberRepository.existsById(referee)) {
                 throw new NotFoundException("Member not found");
             }
         }

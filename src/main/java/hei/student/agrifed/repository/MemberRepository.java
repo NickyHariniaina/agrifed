@@ -74,7 +74,7 @@ public class MemberRepository {
     public Member save(Member member) {
         String memberSql = """
                     insert into member (firstname, lastname, birthdate, gender, address, phone, profession, email, occupation)
-                    values (?,?,?,?,?,?,?,?,?) returning firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
+                    values (?,?,?,?::gender,?,?,?,?,?::occupation) returning firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at;
                 """;
         String refereesSql = """
                     insert into reference (id_member_refered, id_member_referer)
@@ -123,13 +123,13 @@ public class MemberRepository {
         }
     }
 
-    public Boolean existsById(Integer id) {
+    public Boolean existsById(String id) {
         String memberSql = """
                     select count(id) as c from member where id = ?
                 """;
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setInt(1, id);
+            memberPs.setInt(1, Integer.parseInt(id));
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
                 return memberRs.getInt("c") > 0;
