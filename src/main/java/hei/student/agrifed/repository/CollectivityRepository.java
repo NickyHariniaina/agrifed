@@ -382,6 +382,26 @@ public class CollectivityRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    public Double sumTransactionAmountByAccountAt(Integer collectivityId, Integer accountId, LocalDate at) {
+        String sql = """
+                SELECT COALESCE(SUM(amount), 0) AS balance
+                FROM collectivity_transaction
+                WHERE id_collectivity = ?
+                  AND id_financial_account = ?
+                  AND creation_date <= ?
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ps.setInt(2, accountId);
+            ps.setDate(3, Date.valueOf(at));
+            ResultSet rs = ps.executeQuery();
+            // SUM retourne toujours une ligne (même si 0 grâce à COALESCE).
+            if (rs.next()) return rs.getDouble("balance");
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return 0.0;
+    }
+
     private FinancialAccount mapFinancialAccount(ResultSet rs, String idCol, String amountCol)
             throws SQLException {
         FinancialAccount fa = new FinancialAccount();
