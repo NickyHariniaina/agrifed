@@ -162,4 +162,8 @@ public class CollectivityService {
 
         return collectivityRepository.findTransactions(id, from, to);
     }
+
+    public Collectivity findCollectivityById(Integer id) {
+        
+    }
 }

@@ -24,6 +24,17 @@ public class CollectivityController {
         this.collectivityService = collectivityService;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> findCollectivityById(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(collectivityService.findCollectivityById(id);
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> createCollectivities(
             @RequestBody List<CreateCollectivityDto> body) {
