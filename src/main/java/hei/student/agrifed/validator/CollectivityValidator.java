@@ -1,8 +1,8 @@
-package hei.student.agrifed.utils;
+package hei.student.agrifed.validator;
 
 import org.springframework.stereotype.Component;
 
-import hei.student.agrifed.entity.Frequency;
+import hei.student.agrifed.entity.enums.Frequency;
 import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.BadRequestException;
 
