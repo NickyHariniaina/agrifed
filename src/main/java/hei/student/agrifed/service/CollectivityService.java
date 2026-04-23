@@ -9,6 +9,7 @@ import java.util.Set;
 
 import hei.student.agrifed.entity.Collectivity;
 import hei.student.agrifed.entity.CollectivityTransaction;
+import hei.student.agrifed.entity.FinancialAccount;
 import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
@@ -166,5 +167,41 @@ public class CollectivityService {
     public Collectivity findCollectivityById(Integer id) {
         return collectivityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Collectivity not found with ID : " + id));
+    }
+
+    public List<FinancialAccount> findFinancialAccounts(Integer id, String atStr) {
+
+        if (atStr == null)
+            throw new BadRequestException("Query parameter 'at' is mandatory (format: yyyy-MM-dd).");
+
+        LocalDate at;
+        try {
+            at = LocalDate.parse(atStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-04-23).");
+        }
+
+        if (!collectivityRepository.existsById(id.toString()))
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+
+        List<Integer> accountIds = collectivityRepository.findDistinctAccountIdsByCollectivity(id);
+
+        List<FinancialAccount> result = new ArrayList<>();
+
+        for (Integer accountId : accountIds) {
+
+            FinancialAccount account = collectivityRepository
+                    .findFinancialAccountById(accountId)
+                    .orElse(null);
+
+            if (account == null) continue;
+
+            Double balance = collectivityRepository.sumTransactionAmountByAccountAt(id, accountId, at);
+            account.setAmount(balance);
+
+            result.add(account);
+        }
+
+        return result;
     }
 }
