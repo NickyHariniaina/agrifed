@@ -9,7 +9,9 @@ import java.util.Optional;
 import hei.student.agrifed.entity.*;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
-import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
+import hei.student.agrifed.entity.enums.ActivityStatus;
+import hei.student.agrifed.entity.enums.Bank;
+import hei.student.agrifed.entity.enums.Frequency;
 import hei.student.agrifed.exception.NotFoundException;
 
 import org.springframework.stereotype.Repository;

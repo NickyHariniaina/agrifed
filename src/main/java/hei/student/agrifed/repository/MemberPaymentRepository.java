@@ -1,6 +1,7 @@
 package hei.student.agrifed.repository;
 
 import hei.student.agrifed.entity.*;
+import hei.student.agrifed.entity.enums.Bank;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;

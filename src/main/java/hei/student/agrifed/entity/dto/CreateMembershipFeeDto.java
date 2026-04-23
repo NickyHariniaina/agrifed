@@ -2,8 +2,8 @@ package hei.student.agrifed.entity.dto;
 
 import java.time.LocalDate;
 
-import hei.student.agrifed.entity.ActivityStatus;
-import hei.student.agrifed.entity.Frequency;
+import hei.student.agrifed.entity.enums.ActivityStatus;
+import hei.student.agrifed.entity.enums.Frequency;
 import hei.student.agrifed.entity.MembershipFee;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
