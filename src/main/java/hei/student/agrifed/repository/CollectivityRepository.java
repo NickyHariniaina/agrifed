@@ -366,4 +366,20 @@ public class CollectivityRepository {
         return ids;
     }
 
+    public Optional<FinancialAccount> findFinancialAccountById(Integer accountId) {
+        String sql = """
+                SELECT id, account_type, amount,
+                       holder_name, mobile_banking_service, mobile_number,
+                       bank_name, bank_code, bank_branch_code, bank_account_number, bank_account_key
+                FROM financial_account WHERE id = ?
+                """;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, accountId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return Optional.of(mapFinancialAccount(rs, "id", "amount"));
+            return Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
 }
