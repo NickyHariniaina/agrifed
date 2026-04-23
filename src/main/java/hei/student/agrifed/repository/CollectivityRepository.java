@@ -350,6 +350,20 @@ public class CollectivityRepository {
         return results;
     }
 
-
+    public List<Integer> findDistinctAccountIdsByCollectivity(Integer collectivityId) {
+        String sql = """
+                SELECT DISTINCT id_financial_account
+                FROM collectivity_transaction
+                WHERE id_collectivity = ?
+                """;
+        List<Integer> ids = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getInt("id_financial_account"));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return ids;
+    }
 
 }
