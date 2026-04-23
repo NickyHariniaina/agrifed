@@ -111,4 +111,19 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
+    @GetMapping("/{id}/financialAccounts")
+    public ResponseEntity<?> findFinancialAccounts(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String at) {
+        try {
+            return ResponseEntity.ok(collectivityService.findFinancialAccounts(id, at));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 }
