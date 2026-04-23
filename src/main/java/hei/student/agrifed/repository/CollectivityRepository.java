@@ -291,13 +291,16 @@ public class CollectivityRepository {
                                                           LocalDate from, LocalDate to) {
         String sql = """
                 SELECT ct.id, ct.creation_date, ct.amount, ct.payment_mode,
-                       ct.id_member, ct.id_financial_account,
-                       fa.account_type, fa.amount AS fa_amount,
+                       ct.id_member,
+                       m.firstname, m.lastname, m.birthdate, m.gender,
+                       m.address, m.phone, m.profession, m.email, m.occupation, m.joined_at,
+                       fa.id AS fa_id, fa.account_type, fa.amount AS fa_amount,
                        fa.holder_name, fa.mobile_banking_service, fa.mobile_number,
                        fa.bank_name, fa.bank_code, fa.bank_branch_code,
                        fa.bank_account_number, fa.bank_account_key
                 FROM collectivity_transaction ct
                 JOIN financial_account fa ON fa.id = ct.id_financial_account
+                JOIN member m ON m.id = ct.id_member
                 WHERE ct.id_collectivity = ?
                   AND ct.creation_date >= ?
                   AND ct.creation_date <= ?
@@ -313,31 +316,19 @@ public class CollectivityRepository {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
+                FinancialAccount fa = mapFinancialAccount(rs, "fa_id", "fa_amount");
 
-                // Financial account credited
-                FinancialAccount fa = new FinancialAccount();
-                fa.setId(rs.getInt("id_financial_account"));
-                fa.setAccountType(rs.getString("account_type"));
-                fa.setAmount(rs.getDouble("fa_amount"));
-                fa.setHolderName(rs.getString("holder_name"));
-                String mobileSvc = rs.getString("mobile_banking_service");
-                if (mobileSvc != null) fa.setMobileBankingService(MobileBankingService.valueOf(mobileSvc));
-
-                long mobileNum = rs.getLong("mobile_number");
-                if (!rs.wasNull()) fa.setMobileNumber(mobileNum);
-                String bank = rs.getString("bank_name");
-                if (bank != null) fa.setBankName(Bank.valueOf(bank));
-                int bankCode = rs.getInt("bank_code");
-                if (!rs.wasNull()) fa.setBankCode(bankCode);
-                int branchCode = rs.getInt("bank_branch_code");
-                if (!rs.wasNull()) fa.setBankBranchCode(branchCode);
-                long bankAccNum = rs.getLong("bank_account_number");
-                if (!rs.wasNull()) fa.setBankAccountNumber(bankAccNum);
-                int bankAccKey = rs.getInt("bank_account_key");
-                if (!rs.wasNull()) fa.setBankAccountKey(bankAccKey);
-
-                // Member debited
-                Member member = memberRepository.findById(rs.getString("id_member")).orElse(null);
+                Member member = new Member();
+                member.setId(rs.getString("id_member"));
+                member.setFirstName(rs.getString("firstname"));
+                member.setLastName(rs.getString("lastname"));
+                member.setBirthDate(LocalDate.parse(rs.getString("birthdate")));
+                member.setGender(Gender.valueOf(rs.getString("gender")));
+                member.setAddress(rs.getString("address"));
+                member.setPhoneNumber(rs.getInt("phone"));
+                member.setProfession(rs.getString("profession"));
+                member.setEmail(rs.getString("email"));
+                member.setOccupation(MemberOccupation.valueOf(rs.getString("occupation")));
 
                 results.add(CollectivityTransaction.builder()
                         .id(rs.getInt("id"))
@@ -348,59 +339,43 @@ public class CollectivityRepository {
                         .memberDebited(member)
                         .build());
             }
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return results;
     }
 
-    public List<Integer> findDistinctAccountIdsByCollectivity(Integer collectivityId) {
+
+
+    public List<FinancialAccount> findFinancialAccountsWithBalanceAt(Integer collectivityId, LocalDate at) {
         String sql = """
-                SELECT DISTINCT id_financial_account
-                FROM collectivity_transaction
-                WHERE id_collectivity = ?
+                SELECT fa.id, fa.account_type, fa.holder_name,
+                       fa.mobile_banking_service, fa.mobile_number,
+                       fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                       fa.bank_account_number, fa.bank_account_key,
+                       COALESCE(SUM(ct.amount), 0) AS balance
+                FROM financial_account fa
+                JOIN collectivity_transaction ct ON ct.id_financial_account = fa.id
+                WHERE ct.id_collectivity = ?
+                  AND ct.creation_date <= ?
+                GROUP BY fa.id, fa.account_type, fa.holder_name,
+                         fa.mobile_banking_service, fa.mobile_number,
+                         fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                         fa.bank_account_number, fa.bank_account_key
                 """;
-        List<Integer> ids = new ArrayList<>();
+        List<FinancialAccount> result = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setInt(1, collectivityId);
+            ps.setDate(2, Date.valueOf(at));
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) ids.add(rs.getInt("id_financial_account"));
-        } catch (SQLException e) { throw new RuntimeException(e); }
-        return ids;
-    }
-
-    public Optional<FinancialAccount> findFinancialAccountById(Integer accountId) {
-        String sql = """
-                SELECT id, account_type, amount,
-                       holder_name, mobile_banking_service, mobile_number,
-                       bank_name, bank_code, bank_branch_code, bank_account_number, bank_account_key
-                FROM financial_account WHERE id = ?
-                """;
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, accountId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return Optional.of(mapFinancialAccount(rs, "id", "amount"));
-            return Optional.empty();
-        } catch (SQLException e) { throw new RuntimeException(e); }
-    }
-
-    public Double sumTransactionAmountByAccountAt(Integer collectivityId, Integer accountId, LocalDate at) {
-        String sql = """
-                SELECT COALESCE(SUM(amount), 0) AS balance
-                FROM collectivity_transaction
-                WHERE id_collectivity = ?
-                  AND id_financial_account = ?
-                  AND creation_date <= ?
-                """;
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
-            ps.setInt(2, accountId);
-            ps.setDate(3, Date.valueOf(at));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getDouble("balance");
-        } catch (SQLException e) { throw new RuntimeException(e); }
-        return 0.0;
+            while (rs.next()) {
+                result.add(mapFinancialAccount(rs, "id", "balance"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 
     private FinancialAccount mapFinancialAccount(ResultSet rs, String idCol, String amountCol)
