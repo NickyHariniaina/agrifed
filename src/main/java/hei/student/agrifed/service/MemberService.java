@@ -9,7 +9,7 @@ import hei.student.agrifed.entity.Member;
 import hei.student.agrifed.entity.dto.CreateMemberDto;
 import hei.student.agrifed.repository.CollectivityRepository;
 import hei.student.agrifed.repository.MemberRepository;
-import hei.student.agrifed.utils.MemberValidator;
+import hei.student.agrifed.validator.MemberValidator;
 import lombok.AllArgsConstructor;
 
 @Service

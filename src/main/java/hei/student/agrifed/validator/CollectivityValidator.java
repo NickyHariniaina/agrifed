@@ -1,4 +1,4 @@
-package hei.student.agrifed.utils;
+package hei.student.agrifed.validator;
 
 import org.springframework.stereotype.Component;
 
