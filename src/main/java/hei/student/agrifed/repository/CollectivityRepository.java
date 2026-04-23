@@ -343,56 +343,9 @@ public class CollectivityRepository {
         return results;
     }
 
-    public List<Integer> findDistinctAccountIdsByCollectivity(Integer collectivityId) {
-        String sql = """
-                SELECT DISTINCT id_financial_account
-                FROM collectivity_transaction
-                WHERE id_collectivity = ?
-                """;
-        List<Integer> ids = new ArrayList<>();
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) ids.add(rs.getInt("id_financial_account"));
-        } catch (SQLException e) { throw new RuntimeException(e); }
-        return ids;
-    }
 
-    public Optional<FinancialAccount> findFinancialAccountById(Integer accountId) {
-        String sql = """
-                SELECT id, account_type, amount,
-                       holder_name, mobile_banking_service, mobile_number,
-                       bank_name, bank_code, bank_branch_code, bank_account_number, bank_account_key
-                FROM financial_account WHERE id = ?
-                """;
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, accountId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return Optional.of(mapFinancialAccount(rs, "id", "amount"));
-            return Optional.empty();
-        } catch (SQLException e) { throw new RuntimeException(e); }
-    }
 
-    public Double sumTransactionAmountByAccountAt(Integer collectivityId, Integer accountId, LocalDate at) {
-        String sql = """
-                SELECT COALESCE(SUM(amount), 0) AS balance
-                FROM collectivity_transaction
-                WHERE id_collectivity = ?
-                  AND id_financial_account = ?
-                  AND creation_date <= ?
-                """;
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
-            ps.setInt(2, accountId);
-            ps.setDate(3, Date.valueOf(at));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getDouble("balance");
-        } catch (SQLException e) { throw new RuntimeException(e); }
-        return 0.0;
-    }
+
 
     private FinancialAccount mapFinancialAccount(ResultSet rs, String idCol, String amountCol)
             throws SQLException {
