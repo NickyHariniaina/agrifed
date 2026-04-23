@@ -289,13 +289,16 @@ public class CollectivityRepository {
                                                           LocalDate from, LocalDate to) {
         String sql = """
                 SELECT ct.id, ct.creation_date, ct.amount, ct.payment_mode,
-                       ct.id_member, ct.id_financial_account,
-                       fa.account_type, fa.amount AS fa_amount,
+                       ct.id_member,
+                       m.firstname, m.lastname, m.birthdate, m.gender,
+                       m.address, m.phone, m.profession, m.email, m.occupation, m.joined_at,
+                       fa.id AS fa_id, fa.account_type, fa.amount AS fa_amount,
                        fa.holder_name, fa.mobile_banking_service, fa.mobile_number,
                        fa.bank_name, fa.bank_code, fa.bank_branch_code,
                        fa.bank_account_number, fa.bank_account_key
                 FROM collectivity_transaction ct
                 JOIN financial_account fa ON fa.id = ct.id_financial_account
+                JOIN member m ON m.id = ct.id_member
                 WHERE ct.id_collectivity = ?
                   AND ct.creation_date >= ?
                   AND ct.creation_date <= ?
@@ -311,31 +314,19 @@ public class CollectivityRepository {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
+                FinancialAccount fa = mapFinancialAccount(rs, "fa_id", "fa_amount");
 
-                // Financial account credited
-                FinancialAccount fa = new FinancialAccount();
-                fa.setId(rs.getInt("id_financial_account"));
-                fa.setAccountType(rs.getString("account_type"));
-                fa.setAmount(rs.getDouble("fa_amount"));
-                fa.setHolderName(rs.getString("holder_name"));
-                String mobileSvc = rs.getString("mobile_banking_service");
-                if (mobileSvc != null) fa.setMobileBankingService(MobileBankingService.valueOf(mobileSvc));
-
-                long mobileNum = rs.getLong("mobile_number");
-                if (!rs.wasNull()) fa.setMobileNumber(mobileNum);
-                String bank = rs.getString("bank_name");
-                if (bank != null) fa.setBankName(Bank.valueOf(bank));
-                int bankCode = rs.getInt("bank_code");
-                if (!rs.wasNull()) fa.setBankCode(bankCode);
-                int branchCode = rs.getInt("bank_branch_code");
-                if (!rs.wasNull()) fa.setBankBranchCode(branchCode);
-                long bankAccNum = rs.getLong("bank_account_number");
-                if (!rs.wasNull()) fa.setBankAccountNumber(bankAccNum);
-                int bankAccKey = rs.getInt("bank_account_key");
-                if (!rs.wasNull()) fa.setBankAccountKey(bankAccKey);
-
-                // Member debited
-                Member member = memberRepository.findById(rs.getString("id_member")).orElse(null);
+                Member member = new Member();
+                member.setId(rs.getString("id_member"));
+                member.setFirstName(rs.getString("firstname"));
+                member.setLastName(rs.getString("lastname"));
+                member.setBirthDate(LocalDate.parse(rs.getString("birthdate")));
+                member.setGender(Gender.valueOf(rs.getString("gender")));
+                member.setAddress(rs.getString("address"));
+                member.setPhoneNumber(rs.getInt("phone"));
+                member.setProfession(rs.getString("profession"));
+                member.setEmail(rs.getString("email"));
+                member.setOccupation(MemberOccupation.valueOf(rs.getString("occupation")));
 
                 results.add(CollectivityTransaction.builder()
                         .id(rs.getInt("id"))
@@ -346,7 +337,9 @@ public class CollectivityRepository {
                         .memberDebited(member)
                         .build());
             }
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return results;
     }
 
