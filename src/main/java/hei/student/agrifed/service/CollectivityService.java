@@ -170,7 +170,6 @@ public class CollectivityService {
     }
 
     public List<FinancialAccount> findFinancialAccounts(Integer id, String atStr) {
-
         if (atStr == null)
             throw new BadRequestException("Query parameter 'at' is mandatory (format: yyyy-MM-dd).");
 
@@ -184,24 +183,6 @@ public class CollectivityService {
         if (!collectivityRepository.existsById(id.toString()))
             throw new NotFoundException("Collectivity not found with ID : " + id);
 
-        List<Integer> accountIds = collectivityRepository.findDistinctAccountIdsByCollectivity(id);
-
-        List<FinancialAccount> result = new ArrayList<>();
-
-        for (Integer accountId : accountIds) {
-
-            FinancialAccount account = collectivityRepository
-                    .findFinancialAccountById(accountId)
-                    .orElse(null);
-
-            if (account == null) continue;
-
-            Double balance = collectivityRepository.sumTransactionAmountByAccountAt(id, accountId, at);
-            account.setAmount(balance);
-
-            result.add(account);
-        }
-
-        return result;
+        return collectivityRepository.findFinancialAccountsWithBalanceAt(id, at);
     }
 }
