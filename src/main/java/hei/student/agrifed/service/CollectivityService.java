@@ -164,6 +164,7 @@ public class CollectivityService {
     }
 
     public Collectivity findCollectivityById(Integer id) {
-        
+        return collectivityRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Collectivity not found with ID : " + id));
     }
 }
