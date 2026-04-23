@@ -1,5 +1,6 @@
 package hei.student.agrifed.entity;
 
+import hei.student.agrifed.entity.enums.Bank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class FinancialAccount {
     private MobileBankingService mobileBankingService;
     private Long               mobileNumber;
 
-    private Bank    bankName;
+    private Bank bankName;
     private Integer bankCode;
     private Integer bankBranchCode;
     private Long    bankAccountNumber;
