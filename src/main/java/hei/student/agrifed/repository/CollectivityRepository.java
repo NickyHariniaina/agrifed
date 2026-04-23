@@ -396,7 +396,6 @@ public class CollectivityRepository {
             ps.setInt(2, accountId);
             ps.setDate(3, Date.valueOf(at));
             ResultSet rs = ps.executeQuery();
-            // SUM retourne toujours une ligne (même si 0 grâce à COALESCE).
             if (rs.next()) return rs.getDouble("balance");
         } catch (SQLException e) { throw new RuntimeException(e); }
         return 0.0;
