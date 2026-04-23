@@ -345,7 +345,36 @@ public class CollectivityRepository {
 
 
 
-
+    public List<FinancialAccount> findFinancialAccountsWithBalanceAt(Integer collectivityId, LocalDate at) {
+        String sql = """
+                SELECT fa.id, fa.account_type, fa.holder_name,
+                       fa.mobile_banking_service, fa.mobile_number,
+                       fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                       fa.bank_account_number, fa.bank_account_key,
+                       COALESCE(SUM(ct.amount), 0) AS balance
+                FROM financial_account fa
+                JOIN collectivity_transaction ct ON ct.id_financial_account = fa.id
+                WHERE ct.id_collectivity = ?
+                  AND ct.creation_date <= ?
+                GROUP BY fa.id, fa.account_type, fa.holder_name,
+                         fa.mobile_banking_service, fa.mobile_number,
+                         fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                         fa.bank_account_number, fa.bank_account_key
+                """;
+        List<FinancialAccount> result = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ps.setDate(2, Date.valueOf(at));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(mapFinancialAccount(rs, "id", "balance"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
 
     private FinancialAccount mapFinancialAccount(ResultSet rs, String idCol, String amountCol)
             throws SQLException {
