@@ -162,4 +162,9 @@ public class CollectivityService {
 
         return collectivityRepository.findTransactions(id, from, to);
     }
+
+    public Collectivity findCollectivityById(Integer id) {
+        return collectivityRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Collectivity not found with ID : " + id));
+    }
 }
