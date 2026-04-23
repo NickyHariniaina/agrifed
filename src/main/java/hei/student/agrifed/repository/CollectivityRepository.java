@@ -350,5 +350,34 @@ public class CollectivityRepository {
         return results;
     }
 
+    private FinancialAccount mapFinancialAccountFromRs(ResultSet rs, String idCol, String amountCol)
+            throws SQLException {
+        FinancialAccount fa = new FinancialAccount();
+        fa.setId(rs.getInt(idCol));
+        fa.setAccountType(rs.getString("account_type"));
+        fa.setAmount(rs.getDouble(amountCol));
+        fa.setHolderName(rs.getString("holder_name"));
+
+        String mobileSvc = rs.getString("mobile_banking_service");
+        if (mobileSvc != null) fa.setMobileBankingService(MobileBankingService.valueOf(mobileSvc));
+
+        long mobileNum = rs.getLong("mobile_number");
+        if (!rs.wasNull()) fa.setMobileNumber(mobileNum);
+
+        String bank = rs.getString("bank_name");
+        if (bank != null) fa.setBankName(Bank.valueOf(bank));
+
+        int bankCode = rs.getInt("bank_code");
+        if (!rs.wasNull()) fa.setBankCode(bankCode);
+        int branchCode = rs.getInt("bank_branch_code");
+        if (!rs.wasNull()) fa.setBankBranchCode(branchCode);
+        long bankAccNum = rs.getLong("bank_account_number");
+        if (!rs.wasNull()) fa.setBankAccountNumber(bankAccNum);
+        int bankAccKey = rs.getInt("bank_account_key");
+        if (!rs.wasNull()) fa.setBankAccountKey(bankAccKey);
+
+        return fa;
+    }
+
 
 }
