@@ -350,6 +350,55 @@ public class CollectivityRepository {
         return results;
     }
 
+
+    public List<FinancialAccount> findFinancialAccountsWithBalanceAt(Integer collectivityId, LocalDate at) {
+
+        String sql = """
+                SELECT fa.id,
+                       fa.account_type,
+                       fa.holder_name,
+                       fa.mobile_banking_service,
+                       fa.mobile_number,
+                       fa.bank_name,
+                       fa.bank_code,
+                       fa.bank_branch_code,
+                       fa.bank_account_number,
+                       fa.bank_account_key,
+                       COALESCE(SUM(ct.amount), 0) AS balance_at
+                FROM financial_account fa
+                WHERE fa.id IN (
+                    SELECT DISTINCT id_financial_account
+                    FROM collectivity_transaction
+                    WHERE id_collectivity = ?
+                )
+                LEFT JOIN collectivity_transaction ct
+                       ON ct.id_financial_account = fa.id
+                      AND ct.id_collectivity = ?
+                      AND ct.creation_date <= ?
+                GROUP BY fa.id, fa.account_type, fa.holder_name, fa.mobile_banking_service,
+                         fa.mobile_number, fa.bank_name, fa.bank_code, fa.bank_branch_code,
+                         fa.bank_account_number, fa.bank_account_key
+                ORDER BY fa.id
+                """;
+
+        List<FinancialAccount> accounts = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, collectivityId);
+            ps.setInt(2, collectivityId);
+            ps.setDate(3, Date.valueOf(at));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                FinancialAccount fa = mapFinancialAccountFromRs(rs, "id", "balance_at");
+                accounts.add(fa);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+
+        return accounts;
+    }
+
+
     private FinancialAccount mapFinancialAccountFromRs(ResultSet rs, String idCol, String amountCol)
             throws SQLException {
         FinancialAccount fa = new FinancialAccount();
