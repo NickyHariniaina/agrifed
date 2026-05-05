@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
-public class MobileBankingAccount extends FinancialAccount {
+public class MobileBankingAccount implements FinancialAccount {
     private String id;
     private String holderName;
     private MobileBankingService mobileBankingService;

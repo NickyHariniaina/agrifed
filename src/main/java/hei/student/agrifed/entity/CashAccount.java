@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
-public class CashAccount extends FinancialAccount {
+public class CashAccount implements FinancialAccount {
     private String id;
     private Integer amount;
 }
