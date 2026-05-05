@@ -46,7 +46,7 @@ public class CollectivityRepository {
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             for (int i = 0; i < memberIds.size(); i++) {
-                ps.setInt(i + 1, Integer.parseInt(memberIds.get(i)));
+                ps.setString(i + 1, memberIds.get(i));
             }
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getLong(1);
@@ -56,7 +56,7 @@ public class CollectivityRepository {
         return 0;
     }
 
-    public MembershipFee saveMembershipFee(Integer id_collectivity, MembershipFee membershipFee) {
+    public MembershipFee saveMembershipFee(String id_collectivity, MembershipFee membershipFee) {
         String insertMembershipFeeSql = """
                 INSERT INTO membership_fee (eligible_from, frequency, amount, label, status, id_collectivity)
                 VALUES (?, ?::frequency, ?, ?, ?::status, ?)
@@ -69,12 +69,12 @@ public class CollectivityRepository {
             ps.setDouble(3, membershipFee.getAmount());
             ps.setString(4, membershipFee.getLabel());
             ps.setString(5, membershipFee.getStatus().toString());
-            ps.setInt(6, id_collectivity);
+            ps.setString(6, id_collectivity);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 MembershipFee membershipFeeToSave = new MembershipFee();
-                membershipFeeToSave.setId(rs.getInt("id"));
+                membershipFeeToSave.setId(rs.getString("id"));
                 membershipFeeToSave.setEligibleFrom(rs.getDate("eligible_from").toLocalDate());
                 membershipFeeToSave.setFrequency(Frequency.valueOf(rs.getString("frequency")));
                 membershipFeeToSave.setAmount(rs.getDouble("amount"));
@@ -102,10 +102,10 @@ public class CollectivityRepository {
             CreateCollectivityStructureDto s = dto.getStructure();
             PreparedStatement cPs = connection.prepareStatement(insertCollectivitySql);
             cPs.setString(1, dto.getLocation());
-            cPs.setInt(2, Integer.parseInt(s.getPresident()));
-            cPs.setInt(3, Integer.parseInt(s.getTreasurer()));
-            cPs.setInt(4, Integer.parseInt(s.getVicePresident()));
-            cPs.setInt(5, Integer.parseInt(s.getSecretary()));
+            cPs.setString(2, s.getPresident());
+            cPs.setString(3, s.getTreasurer());
+            cPs.setString(4, s.getVicePresident());
+            cPs.setString(5, s.getSecretary());
 
             ResultSet rs = cPs.executeQuery();
             if (!rs.next()) throw new RuntimeException("Fail insertion collectitivy");
@@ -113,8 +113,8 @@ public class CollectivityRepository {
 
             PreparedStatement mcPs = connection.prepareStatement(insertMemberCollectivitySql);
             for (String memberId : dto.getMembers()) {
-                mcPs.setInt(1, Integer.parseInt(memberId));
-                mcPs.setInt(2, Integer.parseInt(collectivityId));
+                mcPs.setString(1, memberId);
+                mcPs.setString(2, collectivityId);
                 mcPs.executeUpdate();
             }
 
@@ -124,7 +124,7 @@ public class CollectivityRepository {
         }
     }
 
-    public Optional<Collectivity> findById(Integer id){
+    public Optional<Collectivity> findById(String id){
         String sql = """
                  SELECT c.id, c.federation_number, c.name, c.location,
                        c.president_id, c.vice_president_id, c.treasurer_id, c.secretary_id
@@ -132,8 +132,8 @@ public class CollectivityRepository {
                 WHERE c.id = ?
                 """;
         try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, id);
+PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) return Optional.empty();
 
@@ -147,7 +147,7 @@ public class CollectivityRepository {
             // Structure
             CollectivityStructure structure = new CollectivityStructure(
                     fetchMember(rs.getString("president_id"),      "Président"),
-                    fetchMember(rs.getString("vice_president_id"), "Vice-président"),
+                    fetchMember(rs.getString("vice_president_id"), "Vice-president"),
                     fetchMember(rs.getString("treasurer_id"),      "Trésorier"),
                     fetchMember(rs.getString("secretary_id"),      "Secrétaire")
             );
@@ -174,7 +174,7 @@ public class CollectivityRepository {
         }
     }
 
-    public Collectivity assignIdentity(Integer id, Integer number, String name) {
+    public Collectivity assignIdentity(String id, Integer number, String name) {
         String sql = """
                 UPDATE collectivity
                 SET federation_number = COALESCE(?, federation_number),
@@ -187,7 +187,7 @@ public class CollectivityRepository {
             else ps.setNull(1, java.sql.Types.INTEGER);
             if (name != null) ps.setString(2, name);
             else ps.setNull(2, java.sql.Types.VARCHAR);
-            ps.setInt(3, id);
+            ps.setString(3, id);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -197,7 +197,7 @@ public class CollectivityRepository {
     }
 
 
-    private List<Member> findMembersByCollectivityId(Integer collectivityId) {
+    private List<Member> findMembersByCollectivityId(String collectivityId) {
         String sql = """
                 SELECT m.id FROM member_collectivity mc
                 JOIN member m ON m.id = mc.id_member
@@ -206,7 +206,7 @@ public class CollectivityRepository {
         List<Member> members = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
+            ps.setString(1, collectivityId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 memberRepository.findById(rs.getString("id")).ifPresent(members::add);
@@ -251,7 +251,7 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(collectivitySql);
-            ps.setInt(1, Integer.parseInt(id));
+            ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt("c") > 0;
         } catch (SQLException e) {
@@ -260,7 +260,7 @@ public class CollectivityRepository {
         return false;
     }
 
-    public List<MembershipFee> findMembershipFeesById(Integer id) {
+    public List<MembershipFee> findMembershipFeesById(String id) {
         String sql = """
                 SELECT id, eligible_from, frequency, amount, label, status
                 FROM membership_fee
@@ -268,12 +268,12 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, id);
+            ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             List<MembershipFee> fees = new ArrayList<>();
             while (rs.next()) {
                 fees.add(MembershipFee.builder()
-                        .id(rs.getInt("id"))
+                        .id(rs.getString("id"))
                         .eligibleFrom(rs.getDate("eligible_from").toLocalDate())
                         .frequency(Frequency.valueOf(rs.getString("frequency")))
                         .amount(rs.getDouble("amount"))
@@ -287,7 +287,7 @@ public class CollectivityRepository {
         }
     }
 
-    public List<CollectivityTransaction> findTransactions(Integer collectivityId,
+    public List<CollectivityTransaction> findTransactions(String collectivityId,
                                                           LocalDate from, LocalDate to) {
         String sql = """
                 SELECT ct.id, ct.creation_date, ct.amount, ct.payment_mode,
@@ -307,7 +307,7 @@ public class CollectivityRepository {
         List<CollectivityTransaction> results = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
+            ps.setString(1, collectivityId);
             ps.setDate(2, Date.valueOf(from));
             ps.setDate(3, Date.valueOf(to));
             ResultSet rs = ps.executeQuery();
@@ -316,7 +316,7 @@ public class CollectivityRepository {
 
                 // Financial account credited
                 FinancialAccount fa = new FinancialAccount();
-                fa.setId(rs.getInt("id_financial_account"));
+                fa.setId(rs.getString("id_financial_account"));
                 fa.setAccountType(rs.getString("account_type"));
                 fa.setAmount(rs.getDouble("fa_amount"));
                 fa.setHolderName(rs.getString("holder_name"));
@@ -340,7 +340,7 @@ public class CollectivityRepository {
                 Member member = memberRepository.findById(rs.getString("id_member")).orElse(null);
 
                 results.add(CollectivityTransaction.builder()
-                        .id(rs.getInt("id"))
+                        .id(rs.getString("id"))
                         .creationDate(rs.getDate("creation_date").toLocalDate())
                         .amount(rs.getDouble("amount"))
                         .paymentMode(PaymentMode.valueOf(rs.getString("payment_mode")))
@@ -352,23 +352,23 @@ public class CollectivityRepository {
         return results;
     }
 
-    public List<Integer> findDistinctAccountIdsByCollectivity(Integer collectivityId) {
+    public List<String> findDistinctAccountIdsByCollectivity(String collectivityId) {
         String sql = """
                 SELECT DISTINCT id_financial_account
                 FROM collectivity_transaction
                 WHERE id_collectivity = ?
                 """;
-        List<Integer> ids = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
+            ps.setString(1, collectivityId);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) ids.add(rs.getInt("id_financial_account"));
+            while (rs.next()) ids.add(rs.getString("id_financial_account"));
         } catch (SQLException e) { throw new RuntimeException(e); }
         return ids;
     }
 
-    public Optional<FinancialAccount> findFinancialAccountById(Integer accountId) {
+    public Optional<FinancialAccount> findFinancialAccountById(String accountId) {
         String sql = """
                 SELECT id, account_type, amount,
                        holder_name, mobile_banking_service, mobile_number,
@@ -377,14 +377,14 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, accountId);
+            ps.setString(1, accountId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return Optional.of(mapFinancialAccount(rs, "id", "amount"));
             return Optional.empty();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
-    public Double sumTransactionAmountByAccountAt(Integer collectivityId, Integer accountId, LocalDate at) {
+    public Double sumTransactionAmountByAccountAt(String collectivityId, String accountId, LocalDate at) {
         String sql = """
                 SELECT COALESCE(SUM(amount), 0) AS balance
                 FROM collectivity_transaction
@@ -394,8 +394,8 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, collectivityId);
-            ps.setInt(2, accountId);
+            ps.setString(1, collectivityId);
+            ps.setString(2, accountId);
             ps.setDate(3, Date.valueOf(at));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getDouble("balance");
@@ -406,7 +406,7 @@ public class CollectivityRepository {
     private FinancialAccount mapFinancialAccount(ResultSet rs, String idCol, String amountCol)
             throws SQLException {
         FinancialAccount fa = new FinancialAccount();
-        fa.setId(rs.getInt(idCol));
+        fa.setId(rs.getString(idCol));
         fa.setAccountType(rs.getString("account_type"));
         fa.setAmount(rs.getDouble(amountCol));
         fa.setHolderName(rs.getString("holder_name"));

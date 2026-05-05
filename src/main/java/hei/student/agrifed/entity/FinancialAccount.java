@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FinancialAccount {
-    private Integer id;
+    private String id;
     private String  accountType;
     private Double  amount;
 

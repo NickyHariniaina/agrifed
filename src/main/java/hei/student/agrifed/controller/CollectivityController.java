@@ -23,7 +23,7 @@ public class CollectivityController {
     private CollectivityService collectivityService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCollectivityById(@PathVariable Integer id) {
+    public ResponseEntity<?> getCollectivityById(@PathVariable String id) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(collectivityService.findCollectivityById(id));
         } catch (NotFoundException error) {
@@ -50,7 +50,7 @@ public class CollectivityController {
 
     @PutMapping("/{id}/informations")
     public ResponseEntity<?> assignIdentity(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestBody(required = false) AssignIdentityDto body) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
@@ -68,7 +68,7 @@ public class CollectivityController {
 
     @GetMapping("/{id}/membershipFees")
     public ResponseEntity<?> findMembershipFeesById(
-            @PathVariable Integer id) {
+            @PathVariable String id) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(collectivityService.findMembershipFeesById(id));
         } catch (NotFoundException error) {
@@ -80,7 +80,7 @@ public class CollectivityController {
 
     @PostMapping("/{id}/membershipFees")
     public ResponseEntity<?> createMembershipFees(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestBody List<CreateMembershipFeeDto> createMembershipFeeDtos) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -96,7 +96,7 @@ public class CollectivityController {
 
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> findTransactions(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
         try {
@@ -112,7 +112,7 @@ public class CollectivityController {
 
     @GetMapping("/{id}/financialAccounts")
     public ResponseEntity<?> findFinancialAccounts(
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestParam(required = false) String at) {
         try {
             return ResponseEntity.ok(collectivityService.findFinancialAccounts(id, at));

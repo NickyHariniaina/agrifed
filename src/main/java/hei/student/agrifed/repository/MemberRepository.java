@@ -34,7 +34,7 @@ public class MemberRepository {
             ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                referees.add(String.valueOf(rs.getInt("id_member_refered")));
+                referees.add(rs.getString("id_member_refered"));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -53,11 +53,11 @@ public class MemberRepository {
         Member member = new Member();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setInt(1, Integer.parseInt(id));
+            memberPs.setString(1, id);
             ResultSet memberRs = memberPs.executeQuery();
 
             PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
-            collectivityPs.setInt(1, Integer.parseInt(id));
+            collectivityPs.setString(1, id);
             ResultSet collectivityRs = collectivityPs.executeQuery();
             if (memberRs.next()) {
                 member.setId(id);
@@ -124,8 +124,8 @@ public class MemberRepository {
 
             PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
             for (String referee : member.getReferees()) {
-                refereesPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
-                refereesPs.setInt(2, Integer.parseInt(referee));
+                refereesPs.setString(1, memberToReturn.getId());
+                refereesPs.setString(2, referee);
                 memberRs = refereesPs.executeQuery();
                 if (memberRs.next()) {
                     memberToReturn.setReferees(new ArrayList<>());
@@ -134,8 +134,8 @@ public class MemberRepository {
             }
 
             PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
-            collectivityPs.setInt(1, Integer.parseInt(memberToReturn.getId()));
-            collectivityPs.setInt(2, Integer.parseInt(member.getCollectivityIdentifier()));
+            collectivityPs.setString(1, memberToReturn.getId());
+            collectivityPs.setString(2, member.getCollectivityIdentifier());
             ResultSet collectivityRs = collectivityPs.executeQuery();
             if (collectivityRs.next()) {
                 memberToReturn.setCollectivityIdentifier(collectivityRs.getString("id_collectivity"));
@@ -152,7 +152,7 @@ public class MemberRepository {
                 """;
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
-            memberPs.setInt(1, Integer.parseInt(id));
+            memberPs.setString(1, id);
             ResultSet memberRs = memberPs.executeQuery();
             if (memberRs.next()) {
                 return memberRs.getInt("c") > 0;

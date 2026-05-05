@@ -95,7 +95,7 @@ public class CollectivityService {
     }
 
 
-    public Collectivity assignIdentity(Integer id, AssignIdentityDto dto) {
+    public Collectivity assignIdentity(String id, AssignIdentityDto dto) {
         if (dto == null || (dto.getNumber() == null && dto.getName() == null)) {
             throw new BadRequestException(
                     "At least number or name must be provided.");
@@ -122,15 +122,15 @@ public class CollectivityService {
         return collectivityRepository.assignIdentity(id, dto.getNumber(), dto.getName());
     }
 
-    public List<MembershipFee> findMembershipFeesById(Integer id) {
-        if (!collectivityRepository.existsById(id.toString())) {
+    public List<MembershipFee> findMembershipFeesById(String id) {
+        if (!collectivityRepository.existsById(id)) {
             throw new NotFoundException("Collectivity not found with ID : " + id);
         }
         return collectivityRepository.findMembershipFeesById(id);
     }
 
-    public List<MembershipFee> saveMembershipFees(Integer id, List<CreateMembershipFeeDto> createMembershipFeeDtos) {
-        if (!collectivityRepository.existsById(id.toString())) {
+    public List<MembershipFee> saveMembershipFees(String id, List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+        if (!collectivityRepository.existsById(id)) {
             throw new NotFoundException("Collectivity not found with ID : " + id);
         }
         List<MembershipFee> memberFeesCreated = new ArrayList<>();
@@ -142,7 +142,7 @@ public class CollectivityService {
         return memberFeesCreated;
     }
 
-    public List<CollectivityTransaction> findTransactions(Integer id, String fromStr, String toStr) {
+    public List<CollectivityTransaction> findTransactions(String id, String fromStr, String toStr) {
         if (fromStr == null || toStr == null)
             throw new BadRequestException("Query parameters 'from' and 'to' are mandatory.");
 
@@ -158,18 +158,18 @@ public class CollectivityService {
         if (from.isAfter(to))
             throw new BadRequestException("'from' date must be before or equal to 'to' date.");
 
-        if (!collectivityRepository.existsById(id.toString()))
+        if (!collectivityRepository.existsById(id))
             throw new NotFoundException("Collectivity not found with ID : " + id);
 
         return collectivityRepository.findTransactions(id, from, to);
     }
 
-    public Collectivity findCollectivityById(Integer id) {
+    public Collectivity findCollectivityById(String id) {
         return collectivityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Collectivity not found with ID : " + id));
     }
 
-    public List<FinancialAccount> findFinancialAccounts(Integer id, String atStr) {
+    public List<FinancialAccount> findFinancialAccounts(String id, String atStr) {
 
         if (atStr == null)
             throw new BadRequestException("Query parameter 'at' is mandatory (format: yyyy-MM-dd).");
@@ -181,14 +181,14 @@ public class CollectivityService {
             throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-04-23).");
         }
 
-        if (!collectivityRepository.existsById(id.toString()))
+        if (!collectivityRepository.existsById(id))
             throw new NotFoundException("Collectivity not found with ID : " + id);
 
-        List<Integer> accountIds = collectivityRepository.findDistinctAccountIdsByCollectivity(id);
+        List<String> accountIds = collectivityRepository.findDistinctAccountIdsByCollectivity(id);
 
         List<FinancialAccount> result = new ArrayList<>();
 
-        for (Integer accountId : accountIds) {
+        for (String accountId : accountIds) {
 
             FinancialAccount account = collectivityRepository
                     .findFinancialAccountById(accountId)

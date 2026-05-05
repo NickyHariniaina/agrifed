@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CollectivityTransaction {
-    private Integer          id;
+    private String          id;
     private LocalDate creationDate;
     private Double           amount;
     private PaymentMode      paymentMode;

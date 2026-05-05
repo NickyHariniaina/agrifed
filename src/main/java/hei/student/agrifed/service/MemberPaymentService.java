@@ -28,13 +28,13 @@ public class MemberPaymentService {
 
         List<MemberPayment> created = new ArrayList<>();
         for (CreateMemberPaymentDto dto : dtos) {
-            created.add(createOne(Integer.parseInt(memberId), dto));
+            created.add(createOne(memberId, dto));
         }
         return created;
     }
 
 
-    private MemberPayment createOne(Integer memberId, CreateMemberPaymentDto dto) {
+    private MemberPayment createOne(String memberId, CreateMemberPaymentDto dto) {
         if (dto.getAmount() == null || dto.getAmount() <= 0) {
             throw new BadRequestException("Amount must be greater than 0.");
         }
@@ -42,10 +42,10 @@ public class MemberPaymentService {
             throw new BadRequestException("paymentMode is required.");
         }
 
-        Integer membershipFeeId = Integer.parseInt(dto.getMembershipFeeIdentifier());
-        Integer accountId       = Integer.parseInt(dto.getAccountCreditedIdentifier());
+        String membershipFeeId = dto.getMembershipFeeIdentifier();
+        String accountId       = dto.getAccountCreditedIdentifier();
 
-        Integer collectivityId = memberPaymentRepository
+        String collectivityId = memberPaymentRepository
                 .findCollectivityIdByMembershipFee(membershipFeeId)
                 .orElseThrow(() -> new NotFoundException(
                         "MembershipFee not found with id : " + membershipFeeId));

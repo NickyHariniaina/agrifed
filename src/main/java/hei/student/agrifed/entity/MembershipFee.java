@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class MembershipFee {
-    private Integer id;
+    private String id;
     private LocalDate eligibleFrom;
     private Frequency frequency;
     private Double amount;

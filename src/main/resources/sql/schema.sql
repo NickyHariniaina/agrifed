@@ -2,7 +2,7 @@ create type gender as enum ('MALE', 'FEMALE');
 create type occupation as enum ('JUNIOR', 'SENIOR', 'SECRETARY', 'TREASURER', 'VICE_PRESIDENT', 'PRESIDENT');
 
 create table member (
-    id serial primary key,
+    id varchar(36) primary key default gen_random_uuid(),
     firstname varchar(255) not null,
     lastname varchar(255) not null,
     birthdate date not null,
@@ -15,23 +15,23 @@ create table member (
 );
 
 create table reference (
-    id serial primary key,
-    id_member_refered integer not null references member(id),
-    id_member_referer integer not null references member(id)
+    id varchar(36) primary key default gen_random_uuid(),
+    id_member_refered varchar(36) not null references member(id),
+    id_member_referer varchar(36) not null references member(id)
 );
 
 create table collectivity (
-    id serial primary key,
+    id varchar(36) primary key default gen_random_uuid(),
     location varchar(255) not null,
-    president_id integer references member(id),
-    treasurer_id integer references member(id),
-    vice_president_id integer references member(id),
-    secretary_id integer references member(id)
+    president_id varchar(36) references member(id),
+    treasurer_id varchar(36) references member(id),
+    vice_president_id varchar(36) references member(id),
+    secretary_id varchar(36) references member(id)
 );
 
 create table member_collectivity (
-    id_member integer not null references member(id),
-    id_collectivity integer not null references collectivity(id),
+    id_member varchar(36) not null references member(id),
+    id_collectivity varchar(36) not null references collectivity(id),
 
     primary key (id_member, id_collectivity)
 );
@@ -46,7 +46,7 @@ create type freqency as enum ('WEEKLY', 'MONTHLY', 'ANNUALLY', 'PUNCTUALLY');
 create type status as enum ('ACTIVE', 'INACTIVE');
 
 create table membership_fee (
-    id serial primary key,
+    id varchar(36) primary key default gen_random_uuid(),
     eligible_from date not null,
     frequency freqency not null,
     amount numeric(10,2) not null check (amount >= 0),
@@ -54,7 +54,7 @@ create table membership_fee (
     status status not null
 );
 
-alter table membership_fee add column id_collectivity integer references collectivity(id);
+alter table membership_fee add column id_collectivity varchar(36) references collectivity(id);
 alter type freqency rename to frequency;
 
 create type payment_mode          as enum ('CASH', 'MOBILE_BANKING', 'BANK_TRANSFER');
@@ -63,7 +63,7 @@ create type mobile_banking_service as enum ('AIRTEL_MONEY', 'MVOLA', 'ORANGE_MON
 create type bank_name             as enum ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI', 'AFG', 'ACCES_BAQUE', 'BAOBAB', 'SIPEM');
 
 create table financial_account (
-                                   id                    serial primary key,
+                                   id                    varchar(36) primary key default gen_random_uuid(),
                                    account_type          account_type    not null,
                                    amount                numeric(15, 2)  not null default 0,
 
@@ -79,23 +79,21 @@ create table financial_account (
 );
 
 create table member_payment (
-                                id                    serial primary key,
-                                id_member             integer        not null references member(id),
-                                id_membership_fee     integer        not null references membership_fee(id),
-                                id_financial_account  integer        not null references financial_account(id),
+                                id                    varchar(36) primary key default gen_random_uuid(),
+                                id_member             varchar(36)        not null references member(id),
+                                id_membership_fee     varchar(36)        not null references membership_fee(id),
+                                id_financial_account  varchar(36)        not null references financial_account(id),
                                 amount                numeric(15, 2) not null,
                                 payment_mode          payment_mode   not null,
                                 creation_date         date           not null default current_date
 );
 
 create table collectivity_transaction (
-                                          id                    serial primary key,
-                                          id_collectivity       integer        not null references collectivity(id),
-                                          id_member             integer        not null references member(id),
-                                          id_financial_account  integer        not null references financial_account(id),
+                                          id                    varchar(36) primary key default gen_random_uuid(),
+                                          id_collectivity       varchar(36)        not null references collectivity(id),
+                                          id_member             varchar(36)        not null references member(id),
+                                          id_financial_account  varchar(36)        not null references financial_account(id),
                                           amount                numeric(15, 2) not null,
                                           payment_mode          payment_mode   not null,
                                           creation_date         date           not null default current_date
 );
-
-
