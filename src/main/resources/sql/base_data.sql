@@ -1,6 +1,5 @@
 -- Test data from PDF - PROG3-TD-Final-23-Avril-2026
--- Members (16 unique members - some appear in multiple collectivities)
--- Collectivity 1 members (C1-M1 to C1-M8)
+-- Members for Collectivity 1 (C1-M1 to C1-M8)
 INSERT INTO member (id, firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at) VALUES
 ('C1-M1', 'Prenom membre 1', 'Nom membre 1', '1980-02-01', 'MALE', 'Lot II V M Ambato.', 341234567, 'Riziculteur', 'member.1@fed-agri.mg', 'PRESIDENT', '2025-01-01'),
 ('C1-M2', 'Prenom membre 2', 'Nom membre 2', '1982-03-05', 'MALE', 'Lot II F Ambato.', 321234567, 'Agriculteur', 'member.2@fed-agri.mg', 'VICE_PRESIDENT', '2025-01-01'),
@@ -9,16 +8,17 @@ INSERT INTO member (id, firstname, lastname, birthdate, gender, address, phone, 
 ('C1-M5', 'Prenom membre 5', 'Nom membre 5', '1999-08-21', 'MALE', 'Lot UV 80 Ambato.', 373434567, 'Riziculteur', 'member.5@fed-agri.mg', 'SENIOR', '2025-01-01'),
 ('C1-M6', 'Prenom membre 6', 'Nom membre 6', '1998-08-22', 'FEMALE', 'Lot UV 6 Ambato.', 372234567, 'Riziculteur', 'member.6@fed-agri.mg', 'SENIOR', '2025-01-01'),
 ('C1-M7', 'Prenom membre 7', 'Nom membre 7', '1998-01-31', 'MALE', 'Lot UV 7 Ambato.', 374234567, 'Riziculteur', 'member.7@fed-agri.mg', 'SENIOR', '2025-01-01'),
-('C1-M8', 'Prenom membre 6', 'Nom membre 8', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 370234567, 'Riziculteur', 'member.8@fed-agri.mg', 'SENIOR', '2025-01-01');
+('C1-M8', 'Prenom membre 8', 'Nom membre 8', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 370234567, 'Riziculteur', 'member.8@fed-agri.mg', 'SENIOR', '2025-01-01');
 
--- Collectivity 2 members (same as C1 but different roles)
+-- Members for Collectivity 2 (shares C1-M1 to C1-M4, plus C2-M5 to C2-M8 as NEW members)
+-- C2-M5 to C2-M8 are different people (not the same as C1-M5 to C1-M8)
 INSERT INTO member (id, firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at) VALUES
 ('C2-M5', 'Prenom membre 5', 'Nom membre 5', '1999-08-21', 'MALE', 'Lot UV 80 Ambato.', 373434567, 'Riziculteur', 'member.5@fed-agri.mg', 'PRESIDENT', '2025-01-01'),
 ('C2-M6', 'Prenom membre 6', 'Nom membre 6', '1998-08-22', 'FEMALE', 'Lot UV 6 Ambato.', 372234567, 'Riziculteur', 'member.6@fed-agri.mg', 'VICE_PRESIDENT', '2025-01-01'),
 ('C2-M7', 'Prenom membre 7', 'Nom membre 7', '1998-01-31', 'MALE', 'Lot UV 7 Ambato.', 374234567, 'Riziculteur', 'member.7@fed-agri.mg', 'SECRETARY', '2025-01-01'),
-('C2-M8', 'Prenom membre 6', 'Nom membre 8', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 370234567, 'Riziculteur', 'member.8@fed-agri.mg', 'TREASURER', '2025-01-01');
+('C2-M8', 'Prenom membre 8', 'Nom membre 8', '1975-08-20', 'MALE', 'Lot UV 8 Ambato.', 370234567, 'Riziculteur', 'member.8@fed-agri.mg', 'TREASURER', '2025-01-01');
 
--- Collectivity 3 members (new members C3-M1 to C3-M8)
+-- Members for Collectivity 3 (C3-M1 to C3-M8 - all new)
 INSERT INTO member (id, firstname, lastname, birthdate, gender, address, phone, profession, email, occupation, joined_at) VALUES
 ('C3-M1', 'Prenom membre 9', 'Nom membre 9', '1988-01-02', 'MALE', 'Lot 33 J Antsirabe', 34034567, 'Apiculteur', 'member.9@fed-agri.mg', 'PRESIDENT', '2025-01-01'),
 ('C3-M2', 'Prenom membre 10', 'Nom membre 10', '1982-03-05', 'MALE', 'Lot 2 J Antsirabe', 338634567, 'Agriculteur', 'member.10@fed-agri.mg', 'VICE_PRESIDENT', '2025-01-01'),
@@ -29,8 +29,8 @@ INSERT INTO member (id, firstname, lastname, birthdate, gender, address, phone, 
 ('C3-M7', 'Prenom membre 15', 'Nom membre 15', '1998-01-13', 'MALE', 'Lot UV 7 Antsirabe', 374914567, 'Apiculteur', 'member.15@fed-agri.mg', 'SENIOR', '2025-01-01'),
 ('C3-M8', 'Prenom membre 16', 'Nom membre 16', '1975-08-02', 'MALE', 'Lot UV 8 Antsirabe', 370634567, 'Apiculteur', 'member.16@fed-agri.mg', 'SENIOR', '2025-01-01');
 
--- Referees (references table) - members refer other members
--- For C1-M3: referees are C1-M1, C1-M2
+-- References (referees for members with referees)
+-- C1-M3 has referees C1-M1, C1-M2
 INSERT INTO reference (id_member_refered, id_member_referer) VALUES
 ('C1-M3', 'C1-M1'),
 ('C1-M3', 'C1-M2'),
@@ -43,7 +43,45 @@ INSERT INTO reference (id_member_refered, id_member_referer) VALUES
 ('C1-M7', 'C1-M1'),
 ('C1-M7', 'C1-M2'),
 ('C1-M8', 'C1-M6'),
-('C1-M8', 'C1-M7');
+('C1-M8', 'C1-M7'),
+-- C2-M3 is same as C1-M3 (already has references)
+-- C2-M4 is same as C1-M4 (already has references)
+-- C2-M5 has referees C1-M1, C1-M2
+('C2-M5', 'C1-M1'),
+('C2-M5', 'C1-M2'),
+-- C2-M6 has referees C1-M1, C1-M2
+('C2-M6', 'C1-M1'),
+('C2-M6', 'C1-M2'),
+-- C2-M7 has referees C1-M1, C1-M2
+('C2-M7', 'C1-M1'),
+('C2-M7', 'C1-M2'),
+-- C2-M8 has referees C1-M6, C1-M7
+('C2-M8', 'C1-M6'),
+('C2-M8', 'C1-M7'),
+-- C3-M1 has referees C1-M1, C1-M2
+('C3-M1', 'C1-M1'),
+('C3-M1', 'C1-M2'),
+-- C3-M2 has referees C1-M1, C1-M2
+('C3-M2', 'C1-M1'),
+('C3-M2', 'C1-M2'),
+-- C3-M3 has referees C3-M1, C3-M2
+('C3-M3', 'C3-M1'),
+('C3-M3', 'C3-M2'),
+-- C3-M4 has referees C3-M1, C3-M2
+('C3-M4', 'C3-M1'),
+('C3-M4', 'C3-M2'),
+-- C3-M5 has referees C3-M1, C3-M2
+('C3-M5', 'C3-M1'),
+('C3-M5', 'C3-M2'),
+-- C3-M6 has referees C3-M1, C3-M2
+('C3-M6', 'C3-M1'),
+('C3-M6', 'C3-M2'),
+-- C3-M7 has referees C3-M1, C3-M2
+('C3-M7', 'C3-M1'),
+('C3-M7', 'C3-M2'),
+-- C3-M8 has referees C3-M1, C3-M2
+('C3-M8', 'C3-M1'),
+('C3-M8', 'C3-M2');
 
 -- Collectivities
 INSERT INTO collectivity (id, federation_number, name, location, president_id, treasurer_id, vice_president_id, secretary_id) VALUES
@@ -52,15 +90,17 @@ INSERT INTO collectivity (id, federation_number, name, location, president_id, t
 ('col-3', 3, 'Tantely mamy', 'Brickaville', 'C3-M1', 'C3-M4', 'C3-M2', 'C3-M3');
 
 -- Member-collectivity relationships
--- Collectivity 1
+-- Collectivity 1: members C1-M1 to C1-M8
 INSERT INTO member_collectivity (id_member, id_collectivity) VALUES
 ('C1-M1', 'col-1'), ('C1-M2', 'col-1'), ('C1-M3', 'col-1'), ('C1-M4', 'col-1'),
 ('C1-M5', 'col-1'), ('C1-M6', 'col-1'), ('C1-M7', 'col-1'), ('C1-M8', 'col-1');
--- Collectivity 2 (using same member IDs as C1-M1 to C1-M8 but they represent same persons)
+
+-- Collectivity 2: members C1-M1 to C1-M4 (shared) + C2-M5 to C2-M8 (new)
 INSERT INTO member_collectivity (id_member, id_collectivity) VALUES
 ('C1-M1', 'col-2'), ('C1-M2', 'col-2'), ('C1-M3', 'col-2'), ('C1-M4', 'col-2'),
 ('C2-M5', 'col-2'), ('C2-M6', 'col-2'), ('C2-M7', 'col-2'), ('C2-M8', 'col-2');
--- Collectivity 3
+
+-- Collectivity 3: members C3-M1 to C3-M8
 INSERT INTO member_collectivity (id_member, id_collectivity) VALUES
 ('C3-M1', 'col-3'), ('C3-M2', 'col-3'), ('C3-M3', 'col-3'), ('C3-M4', 'col-3'),
 ('C3-M5', 'col-3'), ('C3-M6', 'col-3'), ('C3-M7', 'col-3'), ('C3-M8', 'col-3');
@@ -134,25 +174,25 @@ INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_a
 ('col-1', 'C1-M8', 'C1-A-MOBILE-1', 60000, 'MOBILE_BANKING', '2026-01-01');
 
 -- Member Payments and Transactions for Collectivity 2 (2026-01-01)
--- C2-M1 (same as C1-M1) pays 60000 to C2-A-CASH (CASH)
+-- C1-M1 (same as C2-M1) pays 60000 to C2-A-CASH (CASH)
 INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('pay-C2-M1-1', 'C1-M1', 'cot-2', 'C2-A-CASH', 60000, 'CASH', '2026-01-01');
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('col-2', 'C1-M1', 'C2-A-CASH', 60000, 'CASH', '2026-01-01');
 
--- C2-M2 (same as C1-M2) pays 90000 to C2-A-CASH (CASH)
+-- C1-M2 (same as C2-M2) pays 90000 to C2-A-CASH (CASH)
 INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('pay-C2-M2-1', 'C1-M2', 'cot-2', 'C2-A-CASH', 90000, 'CASH', '2026-01-01');
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('col-2', 'C1-M2', 'C2-A-CASH', 90000, 'CASH', '2026-01-01');
 
--- C2-M3 (same as C1-M3) pays 100000 to C2-A-CASH (CASH)
+-- C1-M3 (same as C2-M3) pays 100000 to C2-A-CASH (CASH)
 INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('pay-C2-M3-1', 'C1-M3', 'cot-2', 'C2-A-CASH', 100000, 'CASH', '2026-01-01');
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('col-2', 'C1-M3', 'C2-A-CASH', 100000, 'CASH', '2026-01-01');
 
--- C2-M4 (same as C1-M4) pays 100000 to C2-A-CASH (CASH)
+-- C1-M4 (same as C2-M4) pays 100000 to C2-A-CASH (CASH)
 INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('pay-C2-M4-1', 'C1-M4', 'cot-2', 'C2-A-CASH', 100000, 'CASH', '2026-01-01');
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
