@@ -7,10 +7,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import hei.student.agrifed.entity.BankAccount;
+import hei.student.agrifed.entity.CashAccount;
 import hei.student.agrifed.entity.Collectivity;
 import hei.student.agrifed.entity.CollectivityTransaction;
 import hei.student.agrifed.entity.FinancialAccount;
 import hei.student.agrifed.entity.MembershipFee;
+import hei.student.agrifed.entity.MobileBankingAccount;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
@@ -197,7 +200,13 @@ public class CollectivityService {
             if (account == null) continue;
 
             Double balance = collectivityRepository.sumTransactionAmountByAccountAt(id, accountId, at);
-            account.setAmount(balance);
+            if (account instanceof CashAccount) {
+                ((CashAccount) account).setAmount(balance.intValue());
+            } else if (account instanceof MobileBankingAccount) {
+                ((MobileBankingAccount) account).setAmount(balance);
+            } else if (account instanceof BankAccount) {
+                ((BankAccount) account).setAmount(balance);
+            }
 
             result.add(account);
         }

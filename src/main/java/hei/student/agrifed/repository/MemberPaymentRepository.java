@@ -2,6 +2,7 @@ package hei.student.agrifed.repository;
 
 import hei.student.agrifed.entity.*;
 import hei.student.agrifed.entity.enums.Bank;
+import hei.student.agrifed.entity.enums.MobileBankingService;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -104,31 +105,37 @@ public class MemberPaymentRepository {
 
 
     private FinancialAccount mapFinancialAccount(ResultSet rs) throws SQLException {
-        FinancialAccount fa = new FinancialAccount();
-        fa.setId(rs.getString("id"));
-        fa.setAccountType(rs.getString("account_type"));
-        fa.setAmount(rs.getDouble("amount"));
+        String accountType = rs.getString("account_type");
+        String id = rs.getString("id");
 
-        String mobileSvc = rs.getString("mobile_banking_service");
-        if (mobileSvc != null) fa.setMobileBankingService(MobileBankingService.valueOf(mobileSvc));
-
-        fa.setHolderName(rs.getString("holder_name"));
-        long mobileNum = rs.getLong("mobile_number");
-        if (!rs.wasNull()) fa.setMobileNumber(mobileNum);
-
-        String bank = rs.getString("bank_name");
-        if (bank != null) fa.setBankName(Bank.valueOf(bank));
-
-        int bankCode = rs.getInt("bank_code");
-        if (!rs.wasNull()) fa.setBankCode(bankCode);
-        int branchCode = rs.getInt("bank_branch_code");
-        if (!rs.wasNull()) fa.setBankBranchCode(branchCode);
-        long bankAccNum = rs.getLong("bank_account_number");
-        if (!rs.wasNull()) fa.setBankAccountNumber(bankAccNum);
-        int bankAccKey = rs.getInt("bank_account_key");
-        if (!rs.wasNull()) fa.setBankAccountKey(bankAccKey);
-
-        return fa;
+        if ("CASH".equals(accountType)) {
+            return CashAccount.builder()
+                    .id(id)
+                    .amount(rs.getInt("amount"))
+                    .build();
+        } else if ("MOBILE_BANKING".equals(accountType)) {
+            return MobileBankingAccount.builder()
+                    .id(id)
+                    .holderName(rs.getString("holder_name"))
+                    .mobileBankingService(rs.getString("mobile_banking_service") != null
+                            ? MobileBankingService.valueOf(rs.getString("mobile_banking_service")) : null)
+                    .mobileNumber(rs.getObject("mobile_number", Integer.class))
+                    .amount(rs.getDouble("amount"))
+                    .build();
+        } else if ("BANK".equals(accountType)) {
+            return BankAccount.builder()
+                    .id(id)
+                    .holderName(rs.getString("holder_name"))
+                    .bankName(rs.getString("bank_name") != null
+                            ? Bank.valueOf(rs.getString("bank_name")) : null)
+                    .bankCode(rs.getObject("bank_code", Integer.class))
+                    .bankBranchCode(rs.getObject("bank_branch_code", Integer.class))
+                    .bankAccountNumber(rs.getObject("bank_account_number", Integer.class))
+                    .bankAccountKey(rs.getObject("bank_account_key", Integer.class))
+                    .amount(rs.getDouble("amount"))
+                    .build();
+        }
+        throw new RuntimeException("Unknown account type: " + accountType);
     }
 
 }
