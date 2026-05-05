@@ -174,14 +174,15 @@ public class CollectivityService {
 
     public List<FinancialAccount> findFinancialAccounts(String id, String atStr) {
 
-        if (atStr == null)
-            throw new BadRequestException("Query parameter 'at' is mandatory (format: yyyy-MM-dd).");
-
         LocalDate at;
-        try {
-            at = LocalDate.parse(atStr);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-04-23).");
+        if (atStr == null) {
+            at = LocalDate.now();
+        } else {
+            try {
+                at = LocalDate.parse(atStr);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-04-23).");
+            }
         }
 
         if (!collectivityRepository.existsById(id))
