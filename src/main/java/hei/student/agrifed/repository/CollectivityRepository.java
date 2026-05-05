@@ -393,7 +393,7 @@ PreparedStatement ps = connection.prepareStatement(sql);
         if ("CASH".equals(accountType)) {
             return CashAccount.builder()
                     .id(id)
-                    .amount(rs.getInt(amountCol))
+                    .amount(rs.getObject(amountCol, Integer.class))
                     .build();
         } else if ("MOBILE_BANKING".equals(accountType)) {
             return MobileBankingAccount.builder()

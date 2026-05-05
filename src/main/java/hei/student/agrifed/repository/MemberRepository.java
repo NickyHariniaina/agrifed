@@ -122,15 +122,17 @@ public class MemberRepository {
                 memberToReturn.setOccupation(MemberOccupation.valueOf(memberRs.getString("occupation")));
             }
 
-            PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
-            refereesPs.setString(1, memberToReturn.getId());
-            ResultSet refereeRs = refereesPs.executeQuery();
-            List<Member> refereesList = new ArrayList<>();
-            while (refereeRs.next()) {
-                String refereeId = refereeRs.getString("id_member_referer");
-                findById(refereeId).ifPresent(refereesList::add);
+            if (member.getRefereesIds() != null && !member.getRefereesIds().isEmpty()) {
+                List<Member> refereesList = new ArrayList<>();
+                for (String refereeId : member.getRefereesIds()) {
+                    PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
+                    refereesPs.setString(1, memberToReturn.getId());
+                    refereesPs.setString(2, refereeId);
+                    refereesPs.executeQuery();
+                    findById(refereeId).ifPresent(refereesList::add);
+                }
+                memberToReturn.setReferees(refereesList);
             }
-            memberToReturn.setReferees(refereesList);
 
             PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
             collectivityPs.setString(1, memberToReturn.getId());

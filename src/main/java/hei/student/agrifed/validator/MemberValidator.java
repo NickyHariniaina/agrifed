@@ -14,12 +14,12 @@ public class MemberValidator {
 
     public void checkCreateMemberDto(CreateMemberDto createMemberDto) {
         if (!createMemberDto.getMembershipDuesPaid()) {
-            throw new BadRequestException("Membership dues paid must be greater than 200000.00");
+            throw new BadRequestException("Membership dues paid must be true");
         }
         if (!createMemberDto.getRegistrationFeePaid()) {
-            throw new BadRequestException("Registration fee paid must be greater than 50000.00");
+            throw new BadRequestException("Registration fee paid must be true");
         }
-        if (createMemberDto.getReferees().size() < 1) {
+        if (createMemberDto.getReferees().size() < 2) {
             throw new BadRequestException("Referees must be at least 2");
         }
     }

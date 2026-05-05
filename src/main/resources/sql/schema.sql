@@ -65,16 +65,16 @@ create type bank_name             as enum ('BRED', 'MCB', 'BMOI', 'BOA', 'BGFI',
 create table financial_account (
                                    id                    varchar(36) primary key default gen_random_uuid(),
                                    account_type          account_type    not null,
-                                   amount                numeric(15, 2)  not null default 0,
+                                   amount                integer         not null default 0,
 
                                    holder_name           varchar(255),
                                    mobile_banking_service mobile_banking_service,
-                                   mobile_number         bigint,
+                                   mobile_number         integer,
 
                                    bank_name             bank_name,
                                    bank_code             integer,
                                    bank_branch_code      integer,
-                                   bank_account_number   bigint,
+                                   bank_account_number   integer,
                                    bank_account_key      integer
 );
 

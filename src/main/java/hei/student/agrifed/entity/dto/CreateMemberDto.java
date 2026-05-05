@@ -41,6 +41,7 @@ public class CreateMemberDto {
         member.setOccupation(occupation);
         member.setJoinedAt(LocalDate.now());
         member.setCollectivityIdentifier(collectivityIdentifier);
+        member.setRefereesIds(referees);
         return member;
     }
 }
