@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateMemberPaymentDto {
-    private Double      amount;
+    private Integer    amount;
     private String      membershipFeeIdentifier;
     private String      accountCreditedIdentifier;
     private PaymentMode paymentMode;

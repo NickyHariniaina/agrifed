@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MemberPayment {
     private String          id;
-    private Double           amount;
+    private Integer          amount;
     private PaymentMode      paymentMode;
     private FinancialAccount accountCredited;
     private LocalDate creationDate;

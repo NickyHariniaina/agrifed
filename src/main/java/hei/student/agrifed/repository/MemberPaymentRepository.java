@@ -52,7 +52,7 @@ public class MemberPaymentRepository {
 
     public MemberPayment save(String memberId, String membershipFeeId,
                               String accountId, String collectivityId,
-                              Double amount, PaymentMode paymentMode) {
+                              Integer amount, PaymentMode paymentMode) {
         String insertPaymentSql = """
                 INSERT INTO member_payment
                     (id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date)
@@ -70,13 +70,13 @@ public class MemberPaymentRepository {
             pPs.setString(1, memberId);
             pPs.setString(2, membershipFeeId);
             pPs.setString(3, accountId);
-            pPs.setDouble(4, amount);
+            pPs.setInt(4, amount);
             pPs.setString(5, paymentMode.name());
             ResultSet rs = pPs.executeQuery();
             if (!rs.next()) throw new RuntimeException("Failed to insert member_payment");
 
             String paymentId    = rs.getString("id");
-            Double  savedAmount  = rs.getDouble("amount");
+            Integer savedAmount  = rs.getInt("amount");
             PaymentMode savedMode = PaymentMode.valueOf(rs.getString("payment_mode"));
             LocalDate savedDate = rs.getDate("creation_date").toLocalDate();
 
@@ -84,7 +84,7 @@ public class MemberPaymentRepository {
             tPs.setString(1, collectivityId);
             tPs.setString(2, memberId);
             tPs.setString(3, accountId);
-            tPs.setDouble(4, amount);
+            tPs.setInt(4, amount);
             tPs.setString(5, paymentMode.name());
             tPs.executeUpdate();
 
