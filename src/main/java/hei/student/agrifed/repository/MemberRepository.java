@@ -123,15 +123,14 @@ public class MemberRepository {
             }
 
             PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
-            for (String referee : member.getReferees()) {
-                refereesPs.setString(1, memberToReturn.getId());
-                refereesPs.setString(2, referee);
-                memberRs = refereesPs.executeQuery();
-                if (memberRs.next()) {
-                    memberToReturn.setReferees(new ArrayList<>());
-                    memberToReturn.getReferees().add(String.valueOf(memberRs.getInt("id_member_referer")));
-                }
+            refereesPs.setString(1, memberToReturn.getId());
+            ResultSet refereeRs = refereesPs.executeQuery();
+            List<Member> refereesList = new ArrayList<>();
+            while (refereeRs.next()) {
+                String refereeId = refereeRs.getString("id_member_referer");
+                findById(refereeId).ifPresent(refereesList::add);
             }
+            memberToReturn.setReferees(refereesList);
 
             PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
             collectivityPs.setString(1, memberToReturn.getId());

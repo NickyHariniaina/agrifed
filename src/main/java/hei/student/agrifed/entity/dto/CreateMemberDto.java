@@ -39,7 +39,6 @@ public class CreateMemberDto {
         member.setProfession(profession);
         member.setEmail(email);
         member.setOccupation(occupation);
-        member.setReferees(referees);
         member.setJoinedAt(LocalDate.now());
         member.setCollectivityIdentifier(collectivityIdentifier);
         return member;

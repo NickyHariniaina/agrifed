@@ -21,7 +21,9 @@ public class Member {
     private Integer phoneNumber;
     private String email;
     private MemberOccupation occupation;
-    private List<String> referees;
+    private List<Member> referees;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private LocalDate joinedAt;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String collectivityIdentifier;
 }
