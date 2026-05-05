@@ -1,0 +1,18 @@
+-- Reset database: drop all tables and types
+DROP TABLE IF EXISTS collectivity_transaction CASCADE;
+DROP TABLE IF EXISTS member_payment CASCADE;
+DROP TABLE IF EXISTS financial_account CASCADE;
+DROP TABLE IF EXISTS membership_fee CASCADE;
+DROP TABLE IF EXISTS member_collectivity CASCADE;
+DROP TABLE IF EXISTS reference CASCADE;
+DROP TABLE IF EXISTS collectivity CASCADE;
+DROP TABLE IF EXISTS member CASCADE;
+
+DROP TYPE IF EXISTS gender CASCADE;
+DROP TYPE IF EXISTS occupation CASCADE;
+DROP TYPE IF EXISTS frequency CASCADE;
+DROP TYPE IF EXISTS status CASCADE;
+DROP TYPE IF EXISTS payment_mode CASCADE;
+DROP TYPE IF EXISTS account_type CASCADE;
+DROP TYPE IF EXISTS mobile_banking_service CASCADE;
+DROP TYPE IF EXISTS bank_name CASCADE;
