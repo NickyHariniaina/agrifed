@@ -6,7 +6,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class AssignIdentityDto {
-    private Integer federationNumber;
+    private Integer number;
     private String name;
 
     public AssignIdentityDto() {}

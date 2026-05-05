@@ -139,7 +139,7 @@ public class CollectivityRepository {
 
             Collectivity c = new Collectivity();
             c.setId(rs.getString("id"));
-            c.setFederationNumber(rs.getObject("federation_number") != null
+            c.setNumber(rs.getObject("federation_number") != null
                     ? rs.getInt("federation_number") : null);
             c.setName(rs.getString("name"));
             c.setLocation(rs.getString("location"));
@@ -174,7 +174,7 @@ public class CollectivityRepository {
         }
     }
 
-    public Collectivity assignIdentity(Integer id, Integer federationNumber, String name) {
+    public Collectivity assignIdentity(Integer id, Integer number, String name) {
         String sql = """
                 UPDATE collectivity
                 SET federation_number = COALESCE(?, federation_number),
@@ -183,7 +183,7 @@ public class CollectivityRepository {
                 """;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            if (federationNumber != null) ps.setInt(1, federationNumber);
+            if (number != null) ps.setInt(1, number);
             else ps.setNull(1, java.sql.Types.INTEGER);
             if (name != null) ps.setString(2, name);
             else ps.setNull(2, java.sql.Types.VARCHAR);

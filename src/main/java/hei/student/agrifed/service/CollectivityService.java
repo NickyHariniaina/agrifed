@@ -96,16 +96,16 @@ public class CollectivityService {
 
 
     public Collectivity assignIdentity(Integer id, AssignIdentityDto dto) {
-        if (dto == null || (dto.getFederationNumber() == null && dto.getName() == null)) {
+        if (dto == null || (dto.getNumber() == null && dto.getName() == null)) {
             throw new BadRequestException(
-                    "At least federationNumber or name must be provided.");
+                    "At least number or name must be provided.");
 
         }
 
         Collectivity existing = collectivityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Community not found with ID : " + id));
 
-        if (dto.getFederationNumber() != null && existing.getFederationNumber() != null) {
+        if (dto.getNumber() != null && existing.getNumber() != null) {
             throw new ConflictException(
                     "The federal number is already defined and cannot be changed.");
         }
@@ -119,7 +119,7 @@ public class CollectivityService {
                     "Name '" + dto.getName() + "' is already in use by another collectivity.");
         }
 
-        return collectivityRepository.assignIdentity(id, dto.getFederationNumber(), dto.getName());
+        return collectivityRepository.assignIdentity(id, dto.getNumber(), dto.getName());
     }
 
     public List<MembershipFee> findMembershipFeesById(Integer id) {
