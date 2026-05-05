@@ -3,9 +3,9 @@ package hei.student.agrifed.entity.dto;
 import java.time.LocalDate;
 import java.util.List;
 
-import hei.student.agrifed.entity.Gender;
 import hei.student.agrifed.entity.Member;
-import hei.student.agrifed.entity.MemberOccupation;
+import hei.student.agrifed.entity.enums.Gender;
+import hei.student.agrifed.entity.enums.MemberOccupation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

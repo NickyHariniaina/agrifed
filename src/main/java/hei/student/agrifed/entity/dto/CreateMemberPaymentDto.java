@@ -1,6 +1,6 @@
 package hei.student.agrifed.entity.dto;
 
-import hei.student.agrifed.entity.PaymentMode;
+import hei.student.agrifed.entity.enums.PaymentMode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

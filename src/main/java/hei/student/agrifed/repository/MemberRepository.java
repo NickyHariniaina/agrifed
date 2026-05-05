@@ -9,9 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
-import hei.student.agrifed.entity.Gender;
+import hei.student.agrifed.entity.enums.Gender;
 import hei.student.agrifed.entity.Member;
-import hei.student.agrifed.entity.MemberOccupation;
+import hei.student.agrifed.entity.enums.MemberOccupation;
 
 import org.springframework.stereotype.Repository;
 

@@ -2,6 +2,8 @@ package hei.student.agrifed.entity;
 
 import java.time.LocalDate;
 
+import hei.student.agrifed.entity.enums.PaymentMode;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

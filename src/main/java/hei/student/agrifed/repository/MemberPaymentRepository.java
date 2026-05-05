@@ -3,6 +3,7 @@ package hei.student.agrifed.repository;
 import hei.student.agrifed.entity.*;
 import hei.student.agrifed.entity.enums.Bank;
 import hei.student.agrifed.entity.enums.MobileBankingService;
+import hei.student.agrifed.entity.enums.PaymentMode;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
