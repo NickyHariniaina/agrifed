@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 import hei.student.agrifed.entity.*;
+import hei.student.agrifed.entity.dto.CollectivityLocalStatisticsDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
+import hei.student.agrifed.entity.dto.MemberDescriptionDto;
 import hei.student.agrifed.entity.enums.ActivityStatus;
 import hei.student.agrifed.entity.enums.Bank;
 import hei.student.agrifed.entity.enums.Frequency;
@@ -420,5 +422,74 @@ PreparedStatement ps = connection.prepareStatement(sql);
         throw new RuntimeException("Unknown account type: " + accountType);
     }
 
+    public List<CollectivityLocalStatisticsDto> findStatistics(String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+                SELECT
+                    m.id,
+                    m.firstname,
+                    m.lastname,
+                    m.email,
+                    m.occupation,
+                    COALESCE(SUM(mp.amount), 0) as earned_amount,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN mf.frequency = 'WEEKLY' THEN mf.amount * ((?::date - ?::date) / 7.0)
+                                WHEN mf.frequency = 'MONTHLY' THEN mf.amount * ((?::date - ?::date) / 30.0)
+                                WHEN mf.frequency = 'ANNUALLY' THEN mf.amount * ((?::date - ?::date) / 365.0)
+                                WHEN mf.frequency = 'PUNCTUALLY' AND mf.eligible_from BETWEEN ? AND ? THEN mf.amount
+                                ELSE 0
+                            END
+                        ) - COALESCE(SUM(mp.amount), 0),
+                        0
+                    ) as unpaid_amount
+                FROM member m
+                INNER JOIN member_collectivity mc ON m.id = mc.id_member AND mc.id_collectivity = ?
+                LEFT JOIN member_payment mp ON m.id = mp.id_member
+                    AND mp.creation_date BETWEEN ? AND ?
+                LEFT JOIN membership_fee mf ON mf.id_collectivity = ? AND mf.status = 'ACTIVE'
+                GROUP BY m.id, m.firstname, m.lastname, m.email, m.occupation
+                """;
+
+        List<CollectivityLocalStatisticsDto> results = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            int paramIndex = 1;
+            ps.setDate(paramIndex++, Date.valueOf(to));
+            ps.setDate(paramIndex++, Date.valueOf(from));
+            ps.setDate(paramIndex++, Date.valueOf(to));
+            ps.setDate(paramIndex++, Date.valueOf(from));
+            ps.setDate(paramIndex++, Date.valueOf(to));
+            ps.setDate(paramIndex++, Date.valueOf(from));
+            ps.setDate(paramIndex++, Date.valueOf(from));
+            ps.setDate(paramIndex++, Date.valueOf(to));
+            ps.setString(paramIndex++, collectivityId);
+            ps.setDate(paramIndex++, Date.valueOf(from));
+            ps.setDate(paramIndex++, Date.valueOf(to));
+            ps.setString(paramIndex++, collectivityId);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                MemberDescriptionDto memberDesc = new MemberDescriptionDto();
+                memberDesc.setId(rs.getString("id"));
+                memberDesc.setFirstName(rs.getString("firstname"));
+                memberDesc.setLastName(rs.getString("lastname"));
+                memberDesc.setEmail(rs.getString("email"));
+                memberDesc.setOccupation(rs.getString("occupation") != null
+                        ? MemberOccupation.valueOf(rs.getString("occupation")) : null);
+
+                CollectivityLocalStatisticsDto stat = new CollectivityLocalStatisticsDto();
+                stat.setMemberDescription(memberDesc);
+                stat.setEarnedAmount(rs.getDouble("earned_amount"));
+                stat.setUnpaidAmount(rs.getDouble("unpaid_amount"));
+
+                results.add(stat);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return results;
+    }
 
 }
