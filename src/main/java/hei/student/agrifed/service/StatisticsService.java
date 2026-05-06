@@ -5,7 +5,6 @@ import hei.student.agrifed.entity.CollectivityStatistic;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
 import hei.student.agrifed.entity.dto.CollectivityOverallStatisticDTO;
 import hei.student.agrifed.exception.BadRequestException;
-import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.repository.CollectivityRepository;
 import hei.student.agrifed.repository.StatisticsRepository;
 import org.springframework.stereotype.Service;
@@ -27,39 +26,24 @@ public class StatisticsService {
     }
 
     public List<CollectivityOverallStatisticDTO> getCollectivityOverallStatistics(LocalDate from, LocalDate to) {
-
         if (from == null || to == null) {
             throw new BadRequestException("Both 'from' and 'to' dates are required");
         }
-
         if (from.isAfter(to)) {
             throw new BadRequestException("'from' date cannot be after 'to' date");
         }
 
         List<CollectivityStatistic> stats = statisticsRepository.getStatistics(from, to);
 
-        if (stats == null || stats.isEmpty()) {
-            throw new NotFoundException("No statistics found for the given period");
-        }
-
         List<Collectivity> collectivities = collectivityRepository.findAll();
-
-        if (collectivities == null || collectivities.isEmpty()) {
-            throw new NotFoundException("No collectivities found");
-        }
-
         Map<String, Collectivity> collectivityMap = collectivities.stream()
                 .collect(Collectors.toMap(Collectivity::getId, c -> c));
 
         List<CollectivityOverallStatisticDTO> result = new ArrayList<>();
 
         for (CollectivityStatistic stat : stats) {
-
             Collectivity collectivity = collectivityMap.get(stat.getId());
-
-            if (collectivity == null) {
-                continue;
-            }
+            if (collectivity == null) continue;
 
             AssignIdentityDto identity = new AssignIdentityDto(
                     collectivity.getNumber(),
@@ -72,10 +56,6 @@ public class StatisticsService {
             dto.setOverallMemberCurrentDuePercentage(stat.getOverallMemberCurrentDuePercentage());
 
             result.add(dto);
-        }
-
-        if (result.isEmpty()) {
-            throw new NotFoundException("No matching data found between statistics and collectivities");
         }
 
         return result;
