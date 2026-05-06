@@ -11,11 +11,7 @@ import hei.student.agrifed.entity.dto.CollectivityLocalStatisticsDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
 import hei.student.agrifed.entity.dto.MemberDescriptionDto;
-import hei.student.agrifed.entity.enums.ActivityStatus;
-import hei.student.agrifed.entity.enums.Bank;
-import hei.student.agrifed.entity.enums.Frequency;
-import hei.student.agrifed.entity.enums.MobileBankingService;
-import hei.student.agrifed.entity.enums.PaymentMode;
+import hei.student.agrifed.entity.enums.*;
 import hei.student.agrifed.exception.NotFoundException;
 
 import org.springframework.stereotype.Repository;
@@ -455,19 +451,18 @@ PreparedStatement ps = connection.prepareStatement(sql);
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
 
-            int paramIndex = 1;
-            ps.setDate(paramIndex++, Date.valueOf(to));
-            ps.setDate(paramIndex++, Date.valueOf(from));
-            ps.setDate(paramIndex++, Date.valueOf(to));
-            ps.setDate(paramIndex++, Date.valueOf(from));
-            ps.setDate(paramIndex++, Date.valueOf(to));
-            ps.setDate(paramIndex++, Date.valueOf(from));
-            ps.setDate(paramIndex++, Date.valueOf(from));
-            ps.setDate(paramIndex++, Date.valueOf(to));
-            ps.setString(paramIndex++, collectivityId);
-            ps.setDate(paramIndex++, Date.valueOf(from));
-            ps.setDate(paramIndex++, Date.valueOf(to));
-            ps.setString(paramIndex++, collectivityId);
+            ps.setDate(1, Date.valueOf(to));
+            ps.setDate(2, Date.valueOf(from));
+            ps.setDate(3, Date.valueOf(to));
+            ps.setDate(4, Date.valueOf(from));
+            ps.setDate(5, Date.valueOf(to));
+            ps.setDate(6, Date.valueOf(from));
+            ps.setDate(7, Date.valueOf(from));
+            ps.setDate(8, Date.valueOf(to));
+            ps.setString(9, collectivityId);
+            ps.setDate(10, Date.valueOf(from));
+            ps.setDate(11, Date.valueOf(to));
+            ps.setString(12, collectivityId);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
