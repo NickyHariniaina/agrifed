@@ -163,6 +163,47 @@ PreparedStatement ps = connection.prepareStatement(sql);
         }
     }
 
+    public List<Collectivity> findAll() {
+        String sql = """
+        SELECT c.id, c.federation_number, c.name, c.location,
+               c.president_id, c.vice_president_id, c.treasurer_id, c.secretary_id
+        FROM collectivity c
+        """;
+
+        List<Collectivity> collectivities = new ArrayList<>();
+
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Collectivity c = new Collectivity();
+
+                c.setId(rs.getString("id"));
+                c.setNumber(rs.getObject("federation_number") != null
+                        ? rs.getInt("federation_number") : null);
+                c.setName(rs.getString("name"));
+                c.setLocation(rs.getString("location"));
+
+                CollectivityStructure structure = new CollectivityStructure(
+                        fetchMember(rs.getString("president_id"), "Président"),
+                        fetchMember(rs.getString("vice_president_id"), "Vice-president"),
+                        fetchMember(rs.getString("treasurer_id"), "Trésorier"),
+                        fetchMember(rs.getString("secretary_id"), "Secrétaire")
+                );
+                c.setStructure(structure);
+
+                c.setMembers(findMembersByCollectivityId(c.getId()));
+
+                collectivities.add(c);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return collectivities;
+
+    }
+
 
     public boolean existsByName(String name) {
         String sql = "SELECT 1 FROM collectivity WHERE name = ?";
