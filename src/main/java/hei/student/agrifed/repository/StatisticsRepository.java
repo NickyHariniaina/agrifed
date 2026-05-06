@@ -10,92 +10,146 @@ import java.util.List;
 
 @Repository
 public class StatisticsRepository {
-    private Connection connection;
+    private final Connection connection;
 
     public StatisticsRepository(Connection connection) {
         this.connection = connection;
     }
 
-
-    public List<CollectivityStatistic> getStatistics(LocalDate from, LocalDate to) {
-
-        String sql = """
-        SELECT
-            mc.id_collectivity,
-
-            (
-                SELECT COUNT(m.id)
-                FROM member m
-                JOIN member_collectivity mc2 ON mc2.id_member = m.id
-                WHERE mc2.id_collectivity = mc.id_collectivity
-                  AND m.joined_at BETWEEN ? AND ?
-            ) AS newMembersNumber,
-
-            CASE
-                WHEN COUNT(DISTINCT mc.id_member) = 0 THEN 0
-                ELSE (
-                    SUM(
-                        CASE
-                            WHEN COALESCE(p.paid, 0) >= COALESCE(d.due, 0)
-                                 AND COALESCE(d.due, 0) > 0
-                            THEN 1
-                            ELSE 0
-                        END
-                    ) * 100.0
-                    / COUNT(DISTINCT mc.id_member)
-                )
-            END AS overallMemberCurrentDuePercentage
-
-        FROM member_collectivity mc
-
-        LEFT JOIN (
-            SELECT mf.id, mf.id_collectivity, SUM(mf.amount) AS due
-            FROM membership_fee mf
-            WHERE mf.status = 'ACTIVE'
-              AND mf.eligible_from BETWEEN ? AND ?
-            GROUP BY mf.id, mf.id_collectivity
-        ) d ON mc.id_member = d.id  -- ⚠️ à améliorer si besoin
-
-        LEFT JOIN (
-            SELECT mp.id_member, mf.id_collectivity, SUM(mp.amount) AS paid
-            FROM member_payment mp
-            JOIN membership_fee mf ON mf.id = mp.id_membership_fee
-            WHERE mf.status = 'ACTIVE'
-              AND mp.creation_date BETWEEN ? AND ?
-            GROUP BY mp.id_member, mf.id_collectivity
-        ) p ON mc.id_member = p.id_member
-
-        GROUP BY mc.id_collectivity
-    """;
-
-        List<CollectivityStatistic> statisticList = new ArrayList<>();
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setDate(1, Date.valueOf(from));
-            ps.setDate(2, Date.valueOf(to));
-
-            ps.setDate(3, Date.valueOf(from));
-            ps.setDate(4, Date.valueOf(to));
-
-            ps.setDate(5, Date.valueOf(from));
-            ps.setDate(6, Date.valueOf(to));
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                statisticList.add(new CollectivityStatistic(
-                        rs.getString("id_collectivity"),
-                        rs.getInt("newMembersNumber"),
-                        rs.getDouble("overallMemberCurrentDuePercentage")
-                ));
-            }
-
+    private List<String> findAllCollectivityIds() {
+        String sql = "SELECT DISTINCT id_collectivity FROM member_collectivity";
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) ids.add(rs.getString("id_collectivity"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-        return statisticList;
+        return ids;
     }
 
+    private int countNewMembers(String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+            SELECT COUNT(m.id)
+            FROM member m
+            JOIN member_collectivity mc ON mc.id_member = m.id
+            WHERE mc.id_collectivity = ?
+              AND m.joined_at >= ?
+              AND m.joined_at <= ?
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, collectivityId);
+            ps.setDate(2, Date.valueOf(from));
+            ps.setDate(3, Date.valueOf(to));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
+    }
+
+    private int countTotalMembers(String collectivityId) {
+        String sql = """
+            SELECT COUNT(*) FROM member_collectivity
+            WHERE id_collectivity = ?
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
+    }
+
+    private double sumPaidByMember(String memberId, String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+            SELECT COALESCE(SUM(mp.amount), 0)
+            FROM member_payment mp
+            JOIN membership_fee mf ON mf.id = mp.id_membership_fee
+            WHERE mp.id_member = ?
+              AND mf.id_collectivity = ?
+              AND mf.status = 'ACTIVE'
+              AND mp.creation_date >= ?
+              AND mp.creation_date <= ?
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, memberId);
+            ps.setString(2, collectivityId);
+            ps.setDate(3, Date.valueOf(from));
+            ps.setDate(4, Date.valueOf(to));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return 0.0;
+    }
+
+
+    private double sumDueForCollectivity(String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM membership_fee
+        WHERE id_collectivity = ?
+          AND status = 'ACTIVE'
+          AND frequency IN ('MONTHLY', 'ANNUALLY')
+          AND eligible_from >= ?
+          AND eligible_from <= ?
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, collectivityId);
+            ps.setDate(2, Date.valueOf(from));
+            ps.setDate(3, Date.valueOf(to));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return 0.0;
+    }
+
+    private List<String> findMemberIdsByCollectivity(String collectivityId) {
+        String sql = "SELECT id_member FROM member_collectivity WHERE id_collectivity = ?";
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getString("id_member"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return ids;
+    }
+
+    public List<CollectivityStatistic> getStatistics(LocalDate from, LocalDate to) {
+        List<String> collectivityIds = findAllCollectivityIds();//Récupérer toutes les collectivités
+        List<CollectivityStatistic> result = new ArrayList<>();
+
+        for (String collectivityId : collectivityIds) {
+            int newMembers = countNewMembers(collectivityId, from, to);
+            int totalMembers = countTotalMembers(collectivityId);
+
+            double due = sumDueForCollectivity(collectivityId, from, to);
+
+            double percentage = 0.0;
+            if (totalMembers > 0 && due > 0) {
+                List<String> memberIds = findMemberIdsByCollectivity(collectivityId);
+                int upToDateCount = 0;
+                for (String memberId : memberIds) {
+                    double paid = sumPaidByMember(memberId, collectivityId, from, to);
+                    if (paid >= due) {
+                        upToDateCount++;
+                    }
+                }
+                percentage = (upToDateCount * 100.0) / totalMembers;
+            }
+
+            result.add(new CollectivityStatistic(collectivityId, newMembers, percentage));
+        }
+
+        return result;
+    }
 }
