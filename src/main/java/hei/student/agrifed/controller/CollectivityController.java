@@ -1,5 +1,6 @@
 package hei.student.agrifed.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
@@ -8,8 +9,10 @@ import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.BadRequestException;
 import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
+import hei.student.agrifed.repository.StatisticsRepository;
 import hei.student.agrifed.service.CollectivityService;
 
+import hei.student.agrifed.service.StatisticsService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +23,9 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class CollectivityController {
 
+    private final StatisticsService statisticsService;
     private CollectivityService collectivityService;
+    private StatisticsRepository statisticsRepository;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCollectivityById(@PathVariable String id) {
@@ -122,6 +127,26 @@ public class CollectivityController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getStatisticsOverall(
+            @RequestParam LocalDate from,
+            @RequestParam LocalDate to
+    ) {
+        try {
+            return ResponseEntity.ok(
+                    statisticsService.getCollectivityOverallStatistics(from, to)
+            );
+
+        } catch (NotFoundException error) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(error.getMessage());
+
+        } catch (Exception error) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(error.getMessage());
         }
     }
 }
