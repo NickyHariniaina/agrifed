@@ -11,7 +11,6 @@ import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
 import hei.student.agrifed.repository.StatisticsRepository;
 import hei.student.agrifed.service.CollectivityService;
-
 import hei.student.agrifed.service.StatisticsService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,6 @@ public class CollectivityController {
 
     private final StatisticsService statisticsService;
     private CollectivityService collectivityService;
-    private StatisticsRepository statisticsRepository;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCollectivityById(@PathVariable String id) {
@@ -132,21 +130,15 @@ public class CollectivityController {
 
     @GetMapping("/statistics")
     public ResponseEntity<?> getStatisticsOverall(
-            @RequestParam LocalDate from,
-            @RequestParam LocalDate to
-    ) {
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to) {
         try {
             return ResponseEntity.ok(
-                    statisticsService.getCollectivityOverallStatistics(from, to)
-            );
-
-        } catch (NotFoundException error) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(error.getMessage());
-
+                    statisticsService.getCollectivityOverallStatistics(from, to));
+        } catch (BadRequestException error) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.getMessage());
         } catch (Exception error) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(error.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error.getMessage());
         }
     }
 }
