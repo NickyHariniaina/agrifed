@@ -74,7 +74,7 @@ create table financial_account (
                                    bank_name             bank_name,
                                    bank_code             integer,
                                    bank_branch_code      integer,
-                                   bank_account_number   integer,
+                                   bank_account_number   bigint,
                                    bank_account_key      integer
 );
 
