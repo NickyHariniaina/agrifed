@@ -3,11 +3,14 @@ package hei.student.agrifed.controller;
 import java.util.List;
 
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
+import hei.student.agrifed.entity.dto.CreateActivityMemberAttendanceDto;
+import hei.student.agrifed.entity.dto.CreateCollectivityActivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
 import hei.student.agrifed.exception.BadRequestException;
 import hei.student.agrifed.exception.ConflictException;
 import hei.student.agrifed.exception.NotFoundException;
+import hei.student.agrifed.service.CollectivityActivityService;
 import hei.student.agrifed.service.CollectivityService;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class CollectivityController {
 
     private CollectivityService collectivityService;
+    private CollectivityActivityService collectivityActivityService;
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCollectivityById(@PathVariable String id) {
@@ -132,6 +136,62 @@ public class CollectivityController {
             @RequestParam String to) {
         try {
             return ResponseEntity.ok(collectivityService.getStatistics(id, from, to));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<?> getActivities(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(collectivityActivityService.getActivities(id));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/activities")
+    public ResponseEntity<?> createActivities(
+            @PathVariable String id,
+            @RequestBody List<CreateCollectivityActivityDto> body) {
+        try {
+            return ResponseEntity.ok(collectivityActivityService.createActivities(id, body));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/activities/{activityId}/attendance")
+    public ResponseEntity<?> getAttendance(
+            @PathVariable String id,
+            @PathVariable String activityId) {
+        try {
+            return ResponseEntity.ok(collectivityActivityService.getAttendance(id, activityId));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/activities/{activityId}/attendance")
+    public ResponseEntity<?> recordAttendance(
+            @PathVariable String id,
+            @PathVariable String activityId,
+            @RequestBody List<CreateActivityMemberAttendanceDto> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(collectivityActivityService.recordAttendance(id, activityId, body));
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (NotFoundException e) {

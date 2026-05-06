@@ -89,11 +89,46 @@ create table member_payment (
 );
 
 create table collectivity_transaction (
-                                          id                    varchar(36) primary key default gen_random_uuid(),
-                                          id_collectivity       varchar(36)        not null references collectivity(id),
-                                          id_member             varchar(36)        not null references member(id),
-                                          id_financial_account  varchar(36)        not null references financial_account(id),
-                                          amount                numeric(15, 2) not null,
-                                          payment_mode          payment_mode   not null,
-                                          creation_date         date           not null default current_date
+    id                    varchar(36) primary key default gen_random_uuid(),
+    id_collectivity       varchar(36)        not null references collectivity(id),
+    id_member             varchar(36)        not null references member(id),
+    id_financial_account  varchar(36)        not null references financial_account(id),
+    amount                numeric(15, 2) not null,
+    payment_mode          payment_mode   not null,
+    creation_date         date           not null default current_date
+);
+
+-- Activity and Attendance types
+create type activity_type as enum ('MEETING', 'TRAINING', 'OTHER');
+create type attendance_status as enum ('ATTENDED', 'MISSING', 'UNDEFINED');
+create type day_of_week as enum ('MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU');
+
+-- Collectivity activities (one-time or recurring)
+create table collectivity_activity (
+    id varchar(36) primary key default gen_random_uuid(),
+    id_collectivity varchar(36) not null references collectivity(id),
+    label varchar(255) not null,
+    activity_type activity_type not null,
+    
+    executive_date date,
+    
+    recurrence_week_ordinal integer check (recurrence_week_ordinal between 1 and 5),
+    recurrence_day_of_week day_of_week,
+    
+    member_occupation_concerned occupation[],
+    
+    constraint one_date_rule check (
+        (executive_date is not null and recurrence_week_ordinal is null and recurrence_day_of_week is null) or
+        (executive_date is null and recurrence_week_ordinal is not null and recurrence_day_of_week is not null)
+    )
+);
+
+-- Member attendance tracking for activities
+create table activity_member_attendance (
+    id varchar(36) primary key default gen_random_uuid(),
+    id_activity varchar(36) not null references collectivity_activity(id),
+    id_member varchar(36) not null references member(id),
+    attendance_status attendance_status not null default 'UNDEFINED',
+    
+    unique(id_activity, id_member)
 );
