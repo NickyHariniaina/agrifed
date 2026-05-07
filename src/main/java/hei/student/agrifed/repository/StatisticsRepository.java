@@ -64,22 +64,20 @@ public class StatisticsRepository {
         return 0;
     }
 
-    private double sumPaidByMember(String memberId, String collectivityId, LocalDate from, LocalDate to) {
+    private double sumPaidByMember(String memberId, String collectivityId, LocalDate to) {
         String sql = """
-            SELECT COALESCE(SUM(mp.amount), 0)
-            FROM member_payment mp
-            JOIN membership_fee mf ON mf.id = mp.id_membership_fee
-            WHERE mp.id_member = ?
-              AND mf.id_collectivity = ?
-              AND mf.status = 'ACTIVE'
-              AND mp.creation_date >= ?
-              AND mp.creation_date <= ?
-            """;
+        SELECT COALESCE(SUM(mp.amount), 0)
+        FROM member_payment mp
+        JOIN membership_fee mf ON mf.id = mp.id_membership_fee
+        WHERE mp.id_member = ?
+          AND mf.id_collectivity = ?
+          AND mf.status = 'ACTIVE'
+          AND mp.creation_date <= ?
+        """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, memberId);
             ps.setString(2, collectivityId);
-            ps.setDate(3, Date.valueOf(from));
-            ps.setDate(4, Date.valueOf(to));
+            ps.setDate(3, Date.valueOf(to));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getDouble(1);
         } catch (SQLException e) {
@@ -88,21 +86,26 @@ public class StatisticsRepository {
         return 0.0;
     }
 
-
-    private double sumDueForCollectivity(String collectivityId, LocalDate from, LocalDate to) {
+    private double sumDueForCollectivity(String collectivityId,  LocalDate to) {
         String sql = """
-        SELECT COALESCE(SUM(amount), 0)
-        FROM membership_fee
-        WHERE id_collectivity = ?
-          AND status = 'ACTIVE'
-          AND frequency IN ('MONTHLY', 'ANNUALLY')
-          AND eligible_from >= ?
-          AND eligible_from <= ?
-        """;
+    SELECT COALESCE(SUM(
+      CASE
+        WHEN frequency = 'MONTHLY' THEN
+          amount * (EXTRACT(YEAR FROM AGE(?, eligible_from)) * 12
+                   + EXTRACT(MONTH FROM AGE(?, eligible_from)) + 1)
+        ELSE amount
+      END
+    ), 0)
+    FROM membership_fee
+    WHERE id_collectivity = ?
+      AND status = 'ACTIVE'
+      AND eligible_from <= ?
+    """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, collectivityId);
-            ps.setDate(2, Date.valueOf(from));
-            ps.setDate(3, Date.valueOf(to));
+            ps.setDate(1, Date.valueOf(to));
+            ps.setDate(2, Date.valueOf(to));
+            ps.setString(3, collectivityId);
+            ps.setDate(4, Date.valueOf(to));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getDouble(1);
         } catch (SQLException e) {
@@ -132,14 +135,14 @@ public class StatisticsRepository {
             int newMembers = countNewMembers(collectivityId, from, to);
             int totalMembers = countTotalMembers(collectivityId);
 
-            double due = sumDueForCollectivity(collectivityId, from, to);
+            double due = sumDueForCollectivity(collectivityId, to);
 
             double percentage = 0.0;
             if (totalMembers > 0 && due > 0) {
                 List<String> memberIds = findMemberIdsByCollectivity(collectivityId);
                 int upToDateCount = 0;
                 for (String memberId : memberIds) {
-                    double paid = sumPaidByMember(memberId, collectivityId, from, to);
+                    double paid = sumPaidByMember(memberId, collectivityId, to);
                     if (paid >= due) {
                         upToDateCount++;
                     }
