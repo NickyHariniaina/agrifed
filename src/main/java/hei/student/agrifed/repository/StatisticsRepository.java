@@ -11,9 +11,11 @@ import java.util.List;
 @Repository
 public class StatisticsRepository {
     private final Connection connection;
+    private final CollectivityActivityRepository collectivityActivityRepository;
 
-    public StatisticsRepository(Connection connection) {
+    public StatisticsRepository(Connection connection, CollectivityActivityRepository collectivityActivityRepository) {
         this.connection = connection;
+        this.collectivityActivityRepository = collectivityActivityRepository;
     }
 
     private List<String> findAllCollectivityIds() {
@@ -150,7 +152,10 @@ public class StatisticsRepository {
                 percentage = (upToDateCount * 100.0) / totalMembers;
             }
 
-            result.add(new CollectivityStatistic(collectivityId, newMembers, percentage));
+            double overallAssiduity = collectivityActivityRepository
+                    .getOverallAssiduityPercentageForCollectivity(collectivityId, from, to);
+
+            result.add(new CollectivityStatistic(collectivityId, newMembers, percentage, overallAssiduity));
         }
 
         return result;
