@@ -14,4 +14,5 @@ public class CollectivityOverallStatisticDTO {
     private AssignIdentityDto collectivityInformation;
     private Integer newMembersNumber;
     private Double overallMemberCurrentDuePercentage;
+    private Double overallMemberAssiduityPercentage;
 }
