@@ -1,14 +1,12 @@
 package hei.student.agrifed.entity.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Setter
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class AssignIdentityDto {
     private Integer number;
     private String name;
-
-    public AssignIdentityDto() {}
 
 }
