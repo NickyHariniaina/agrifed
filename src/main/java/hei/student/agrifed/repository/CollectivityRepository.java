@@ -7,13 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 import hei.student.agrifed.entity.*;
+import hei.student.agrifed.entity.dto.CollectivityLocalStatisticsDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
-import hei.student.agrifed.entity.enums.ActivityStatus;
-import hei.student.agrifed.entity.enums.Bank;
-import hei.student.agrifed.entity.enums.Frequency;
-import hei.student.agrifed.entity.enums.MobileBankingService;
-import hei.student.agrifed.entity.enums.PaymentMode;
+import hei.student.agrifed.entity.dto.MemberDescriptionDto;
+import hei.student.agrifed.entity.enums.*;
 import hei.student.agrifed.exception.NotFoundException;
 
 import org.springframework.stereotype.Repository;
@@ -23,10 +21,12 @@ public class CollectivityRepository {
 
     private final Connection connection;
     private final MemberRepository memberRepository;
+    private final CollectivityActivityRepository collectivityActivityRepository;
 
-    public CollectivityRepository(Connection connection, MemberRepository memberRepository) {
+    public CollectivityRepository(Connection connection, MemberRepository memberRepository, CollectivityActivityRepository collectivityActivityRepository) {
         this.connection = connection;
         this.memberRepository = memberRepository;
+        this.collectivityActivityRepository = collectivityActivityRepository;
     }
 
 
@@ -146,7 +146,6 @@ PreparedStatement ps = connection.prepareStatement(sql);
             c.setName(rs.getString("name"));
             c.setLocation(rs.getString("location"));
 
-            // Structure
             CollectivityStructure structure = new CollectivityStructure(
                     fetchMember(rs.getString("president_id"),      "Président"),
                     fetchMember(rs.getString("vice_president_id"), "Vice-president"),
@@ -155,12 +154,52 @@ PreparedStatement ps = connection.prepareStatement(sql);
             );
             c.setStructure(structure);
 
-            // Membres
             c.setMembers(findMembersByCollectivityId(id));
             return Optional.of(c);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Collectivity> findAll() {
+        String sql = """
+        SELECT c.id, c.federation_number, c.name, c.location,
+               c.president_id, c.vice_president_id, c.treasurer_id, c.secretary_id
+        FROM collectivity c
+        """;
+
+        List<Collectivity> collectivities = new ArrayList<>();
+
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Collectivity c = new Collectivity();
+
+                c.setId(rs.getString("id"));
+                c.setNumber(rs.getObject("federation_number") != null
+                        ? rs.getInt("federation_number") : null);
+                c.setName(rs.getString("name"));
+                c.setLocation(rs.getString("location"));
+
+                CollectivityStructure structure = new CollectivityStructure(
+                        fetchMember(rs.getString("president_id"), "Président"),
+                        fetchMember(rs.getString("vice_president_id"), "Vice-president"),
+                        fetchMember(rs.getString("treasurer_id"), "Trésorier"),
+                        fetchMember(rs.getString("secretary_id"), "Secrétaire")
+                );
+                c.setStructure(structure);
+
+                c.setMembers(findMembersByCollectivityId(c.getId()));
+
+                collectivities.add(c);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return collectivities;
+
     }
 
 
@@ -420,5 +459,77 @@ PreparedStatement ps = connection.prepareStatement(sql);
         throw new RuntimeException("Unknown account type: " + accountType);
     }
 
+    public List<CollectivityLocalStatisticsDto> findStatistics(String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+                SELECT
+                    m.id,
+                    m.firstname,
+                    m.lastname,
+                    m.email,
+                    m.occupation,
+                    COALESCE(SUM(mp.amount), 0) as earned_amount,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN mf.frequency = 'WEEKLY' THEN mf.amount * ((?::date - ?::date) / 7.0)
+                                WHEN mf.frequency = 'MONTHLY' THEN mf.amount * ((?::date - ?::date) / 30.0)
+                                WHEN mf.frequency = 'ANNUALLY' THEN mf.amount * ((?::date - ?::date) / 365.0)
+                                WHEN mf.frequency = 'PUNCTUALLY' AND mf.eligible_from BETWEEN ? AND ? THEN mf.amount
+                                ELSE 0
+                            END
+                        ) - COALESCE(SUM(mp.amount), 0),
+                        0
+                    ) as unpaid_amount
+                FROM member m
+                INNER JOIN member_collectivity mc ON m.id = mc.id_member AND mc.id_collectivity = ?
+                LEFT JOIN member_payment mp ON m.id = mp.id_member
+                    AND mp.creation_date BETWEEN ? AND ?
+                LEFT JOIN membership_fee mf ON mf.id_collectivity = ? AND mf.status = 'ACTIVE'
+                GROUP BY m.id, m.firstname, m.lastname, m.email, m.occupation
+                """;
+
+        List<CollectivityLocalStatisticsDto> results = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setDate(1, Date.valueOf(to));
+            ps.setDate(2, Date.valueOf(from));
+            ps.setDate(3, Date.valueOf(to));
+            ps.setDate(4, Date.valueOf(from));
+            ps.setDate(5, Date.valueOf(to));
+            ps.setDate(6, Date.valueOf(from));
+            ps.setDate(7, Date.valueOf(from));
+            ps.setDate(8, Date.valueOf(to));
+            ps.setString(9, collectivityId);
+            ps.setDate(10, Date.valueOf(from));
+            ps.setDate(11, Date.valueOf(to));
+            ps.setString(12, collectivityId);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                MemberDescriptionDto memberDesc = new MemberDescriptionDto();
+                memberDesc.setId(rs.getString("id"));
+                memberDesc.setFirstName(rs.getString("firstname"));
+                memberDesc.setLastName(rs.getString("lastname"));
+                memberDesc.setEmail(rs.getString("email"));
+                memberDesc.setOccupation(rs.getString("occupation") != null
+                        ? MemberOccupation.valueOf(rs.getString("occupation")) : null);
+
+                CollectivityLocalStatisticsDto stat = new CollectivityLocalStatisticsDto();
+                stat.setMemberDescription(memberDesc);
+                stat.setEarnedAmount(rs.getDouble("earned_amount"));
+                stat.setUnpaidAmount(rs.getDouble("unpaid_amount"));
+
+                double assiduity = collectivityActivityRepository
+                        .getAssiduityPercentageForMember(collectivityId, rs.getString("id"), from, to);
+                stat.setAssiduityPercentage(assiduity);
+
+                results.add(stat);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return results;
+    }
 
 }

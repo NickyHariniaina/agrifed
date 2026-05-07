@@ -15,6 +15,7 @@ import hei.student.agrifed.entity.FinancialAccount;
 import hei.student.agrifed.entity.MembershipFee;
 import hei.student.agrifed.entity.MobileBankingAccount;
 import hei.student.agrifed.entity.dto.AssignIdentityDto;
+import hei.student.agrifed.entity.dto.CollectivityLocalStatisticsDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityDto;
 import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
 import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
@@ -213,5 +214,30 @@ public class CollectivityService {
         }
 
         return result;
+    }
+
+    public List<CollectivityLocalStatisticsDto> getStatistics(String id, String fromStr, String toStr) {
+        if (fromStr == null || toStr == null) {
+            throw new BadRequestException("Query parameters 'from' and 'to' are mandatory.");
+        }
+
+        LocalDate from;
+        LocalDate to;
+        try {
+            from = LocalDate.parse(fromStr);
+            to = LocalDate.parse(toStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-01-01).");
+        }
+
+        if (from.isAfter(to)) {
+            throw new BadRequestException("'from' date must be before or equal to 'to' date.");
+        }
+
+        if (!collectivityRepository.existsById(id)) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
+
+        return collectivityRepository.findStatistics(id, from, to);
     }
 }
