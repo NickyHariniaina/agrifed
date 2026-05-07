@@ -1,6 +1,7 @@
 package hei.student.agrifed.repository;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -251,5 +252,75 @@ INSERT INTO activity_member_attendance (id_activity, id_member, attendance_statu
                 .idMember(rs.getString("id_member"))
                 .attendanceStatus(AttendanceStatus.valueOf(rs.getString("attendance_status")))
                 .build();
+    }
+
+    public double getAssiduityPercentageForMember(String collectivityId, String memberId, LocalDate from, LocalDate to) {
+        String sql = """
+        SELECT COALESCE(
+            COUNT(CASE WHEN ama.attendance_status = 'ATTENDED' THEN 1 END) * 100.0
+            / NULLIF(COUNT(ca.id), 0),
+        0.0) AS assiduity
+        FROM collectivity_activity ca
+        JOIN member m ON m.id = ?
+        LEFT JOIN activity_member_attendance ama
+            ON ama.id_activity = ca.id AND ama.id_member = ?
+        WHERE ca.id_collectivity = ?
+          AND (
+            (ca.executive_date IS NOT NULL AND ca.executive_date >= ? AND ca.executive_date <= ?)
+            OR ca.executive_date IS NULL
+          )
+          AND (
+            ca.member_occupation_concerned IS NULL
+            OR cardinality(ca.member_occupation_concerned) = 0
+            OR m.occupation = ANY(ca.member_occupation_concerned)
+          )
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, memberId);
+            ps.setString(2, memberId);
+            ps.setString(3, collectivityId);
+            ps.setDate(4, Date.valueOf(from));
+            ps.setDate(5, Date.valueOf(to));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble("assiduity");
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return 0.0;
+    }
+
+    public double getOverallAssiduityPercentageForCollectivity(String collectivityId, LocalDate from, LocalDate to) {
+        String sql = """
+        SELECT COALESCE(AVG(member_assiduity), 0.0)
+        FROM (
+            SELECT mc.id_member,
+                COALESCE(
+                    COUNT(CASE WHEN ama.attendance_status = 'ATTENDED' THEN 1 END) * 100.0
+                    / NULLIF(COUNT(ca.id), 0),
+                0.0) AS member_assiduity
+            FROM member_collectivity mc
+            JOIN member m ON m.id = mc.id_member
+            LEFT JOIN collectivity_activity ca ON ca.id_collectivity = mc.id_collectivity
+                AND (
+                    (ca.executive_date IS NOT NULL AND ca.executive_date >= ? AND ca.executive_date <= ?)
+                    OR ca.executive_date IS NULL
+                )
+                AND (
+                    ca.member_occupation_concerned IS NULL
+                    OR cardinality(ca.member_occupation_concerned) = 0
+                    OR m.occupation = ANY(ca.member_occupation_concerned)
+                )
+            LEFT JOIN activity_member_attendance ama
+                ON ama.id_activity = ca.id AND ama.id_member = mc.id_member
+            WHERE mc.id_collectivity = ?
+            GROUP BY mc.id_member
+        ) AS per_member
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(from));
+            ps.setDate(2, Date.valueOf(to));
+            ps.setString(3, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getDouble(1);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return 0.0;
     }
 }
