@@ -111,6 +111,144 @@ public class CollectivityIT {
         var totalAmount = collectivityTransactions.stream()
                 .map(collectivityTransaction -> collectivityTransaction.amount.doubleValue())
                 .reduce(0.0, Double::sum);
-        assertTrue(770000.0 == totalAmount || totalAmount == 750000.0, "Collectivity transactions amount not as expected, actual is = " + totalAmount);
+        assertTrue(770000.0 == totalAmount, "Collectivity transactions amount not as expected, actual is = " + totalAmount);
+    }
+
+    @Test
+    void get_membership_fees_success() {
+        var id = "col-1";
+        var fees = apiClient.get("/collectivities/" + id + "/membershipFees",
+                new ParameterizedTypeReference<List<MembershipFee>>() {});
+
+        assertNotNull(fees, "Unable to obtain membership fees for collectivity.id=" + id);
+        assertFalse(fees.isEmpty(), "Membership fees should not be empty");
+        log.info("MembershipFees: " + fees);
+    }
+
+    @Test
+    void create_membership_fees_ko_missing_param() {
+        var id = "col-1";
+        var exception = assertThrows(RuntimeException.class,
+                () -> apiClient.post("/collectivities/" + id + "/membershipFees",
+                        List.of(), new ParameterizedTypeReference<List<MembershipFee>>() {}));
+        assertTrue(exception.getMessage().contains("HTTP Error: 400"));
+        log.info(exception.getMessage());
+    }
+
+    @Test
+    void get_statistics_success() {
+        var id = "col-1";
+        var from = "2026-01-01";
+        var to = "2026-04-30";
+
+        var stats = apiClient.get("/collectivities/" + id + "/statistics?from=" + from + "&to=" + to,
+                new ParameterizedTypeReference<List<CollectivityLocalStatistics>>() {});
+
+        assertNotNull(stats, "Unable to obtain statistics for collectivity.id=" + id);
+        assertFalse(stats.isEmpty(), "Statistics should not be empty");
+        log.info("Statistics: " + stats);
+    }
+
+    @Test
+    void get_statistics_missing_params() {
+        var id = "col-1";
+        var exception = assertThrows(RuntimeException.class,
+                () -> apiClient.get("/collectivities/" + id + "/statistics", Object.class));
+        assertTrue(exception.getMessage().contains("HTTP Error: 400"));
+        log.info(exception.getMessage());
+    }
+
+    @Test
+    void get_activities_success() {
+        var id = "col-1";
+        var activities = apiClient.get("/collectivities/" + id + "/activities",
+                new ParameterizedTypeReference<List<CollectivityActivity>>() {});
+
+        assertNotNull(activities, "Unable to obtain activities for collectivity.id=" + id);
+        log.info("Activities: " + activities);
+    }
+
+    @Test
+    void create_activities_success() {
+        var id = "col-1";
+        var activity = new CreateCollectivityActivity();
+        activity.label = "Test Activity";
+        activity.activityType = ActivityType.MEETING;
+        activity.executiveDate = java.time.LocalDate.parse("2026-12-15");
+
+        var created = apiClient.post("/collectivities/" + id + "/activities",
+                List.of(activity), new ParameterizedTypeReference<List<CollectivityActivity>>() {});
+
+        assertNotNull(created, "Failed to create activity");
+        assertFalse(created.isEmpty(), "Created activities should not be empty");
+        log.info("Created Activities: " + created);
+    }
+
+    @Test
+    void create_activities_ko_both_date_and_recurrence() {
+        var id = "col-1";
+        var activity = new CreateCollectivityActivity();
+        activity.label = "Bad Activity";
+        activity.activityType = ActivityType.MEETING;
+        activity.executiveDate = java.time.LocalDate.parse("2026-12-15");
+        activity.recurrenceRule = new MonthlyRecurrenceRule();
+        activity.recurrenceRule.weekOrdinal = 3;
+        activity.recurrenceRule.dayOfWeek = DayOfWeek.SA;
+
+        var exception = assertThrows(RuntimeException.class,
+                () -> apiClient.post("/collectivities/" + id + "/activities",
+                        List.of(activity), new ParameterizedTypeReference<List<CollectivityActivity>>() {}));
+        assertTrue(exception.getMessage().contains("HTTP Error: 400"));
+        log.info(exception.getMessage());
+    }
+
+    @Test
+    void get_activity_attendance_success() {
+        var id = "col-1";
+        // First create an activity
+        var activity = new CreateCollectivityActivity();
+        activity.label = "Attendance Test";
+        activity.activityType = ActivityType.TRAINING;
+        activity.recurrenceRule = new MonthlyRecurrenceRule();
+        activity.recurrenceRule.weekOrdinal = 3;
+        activity.recurrenceRule.dayOfWeek = DayOfWeek.SA;
+
+        var created = apiClient.post("/collectivities/" + id + "/activities",
+                List.of(activity), new ParameterizedTypeReference<List<CollectivityActivity>>() {});
+        assertNotNull(created);
+        var activityId = created.get(0).id;
+
+        // Get attendance
+        var attendance = apiClient.get("/collectivities/" + id + "/activities/" + activityId + "/attendance",
+                new ParameterizedTypeReference<List<ActivityMemberAttendance>>() {});
+
+        assertNotNull(attendance, "Unable to obtain attendance for activity.id=" + activityId);
+        log.info("Attendance: " + attendance);
+    }
+
+    @Test
+    void record_attendance_success() {
+        var id = "col-1";
+        // First create an activity
+        var activity = new CreateCollectivityActivity();
+        activity.label = "Record Attendance Test";
+        activity.activityType = ActivityType.OTHER;
+        activity.executiveDate = java.time.LocalDate.parse("2026-12-20");
+
+        var created = apiClient.post("/collectivities/" + id + "/activities",
+                List.of(activity), new ParameterizedTypeReference<List<CollectivityActivity>>() {});
+        assertNotNull(created);
+        var activityId = created.get(0).id;
+
+        // Record attendance
+        var attendanceDto = new CreateActivityMemberAttendance();
+        attendanceDto.memberIdentifier = "C1-M1";
+        attendanceDto.attendanceStatus = AttendanceStatus.ATTENDED;
+
+        var recorded = apiClient.post("/collectivities/" + id + "/activities/" + activityId + "/attendance",
+                List.of(attendanceDto), new ParameterizedTypeReference<List<ActivityMemberAttendance>>() {});
+
+        assertNotNull(recorded, "Failed to record attendance");
+        log.info("Recorded Attendance: " + recorded);
     }
 }
