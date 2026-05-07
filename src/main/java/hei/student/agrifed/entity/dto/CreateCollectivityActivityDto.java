@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import hei.student.agrifed.entity.CollectivityActivity;
+import hei.student.agrifed.entity.MonthlyRecurrenceRule;
 import hei.student.agrifed.entity.enums.ActivityType;
-import hei.student.agrifed.entity.enums.DayOfWeek;
 import hei.student.agrifed.entity.enums.MemberOccupation;
 
 import lombok.AllArgsConstructor;
@@ -21,8 +21,7 @@ public class CreateCollectivityActivityDto {
     private String label;
     private ActivityType activityType;
     private LocalDate executiveDate;
-    private Integer recurrenceWeekOrdinal;
-    private DayOfWeek recurrenceDayOfWeek;
+    private MonthlyRecurrenceRule recurrenceRule;
     private List<MemberOccupation> memberOccupationConcerned;
 
     public CollectivityActivity toCollectivityActivity() {
@@ -30,8 +29,7 @@ public class CreateCollectivityActivityDto {
                 .label(label)
                 .activityType(activityType)
                 .executiveDate(executiveDate)
-                .recurrenceWeekOrdinal(recurrenceWeekOrdinal)
-                .recurrenceDayOfWeek(recurrenceDayOfWeek)
+                .recurrenceRule(recurrenceRule)
                 .memberOccupationConcerned(memberOccupationConcerned)
                 .build();
     }

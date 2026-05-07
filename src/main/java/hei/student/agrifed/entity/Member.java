@@ -1,6 +1,7 @@
 package hei.student.agrifed.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import hei.student.agrifed.entity.enums.Gender;
@@ -24,8 +25,8 @@ public class Member {
     private Integer phoneNumber;
     private String email;
     private MemberOccupation occupation;
-    private List<Member> referees;
-    private List<String> refereesIds;
+    private List<Member> referees = new ArrayList<>();
+    private List<String> refereesIds = new ArrayList<>();
     @com.fasterxml.jackson.annotation.JsonIgnore
     private LocalDate joinedAt;
     @com.fasterxml.jackson.annotation.JsonIgnore

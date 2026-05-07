@@ -16,3 +16,9 @@ DROP TYPE IF EXISTS payment_mode CASCADE;
 DROP TYPE IF EXISTS account_type CASCADE;
 DROP TYPE IF EXISTS mobile_banking_service CASCADE;
 DROP TYPE IF EXISTS bank_name CASCADE;
+DROP TYPE IF EXISTS activity_type CASCADE;
+DROP TYPE IF EXISTS attendance_status CASCADE;
+DROP TYPE IF EXISTS day_of_week CASCADE;
+
+DROP TABLE IF EXISTS activity_member_attendance CASCADE;
+DROP TABLE IF EXISTS collectivity_activity CASCADE;

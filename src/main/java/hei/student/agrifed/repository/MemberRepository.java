@@ -50,6 +50,9 @@ public class MemberRepository {
         String collectivitySql = """
                     select id_collectivity from member_collectivity where id_member = ?
                 """;
+        String refereesSql = """
+                    select id_member_referer from reference where id_member_refered = ?
+                """;
         Member member = new Member();
         try {
             PreparedStatement memberPs = connection.prepareStatement(memberSql);
@@ -59,6 +62,17 @@ public class MemberRepository {
             PreparedStatement collectivityPs = connection.prepareStatement(collectivitySql);
             collectivityPs.setString(1, id);
             ResultSet collectivityRs = collectivityPs.executeQuery();
+
+            PreparedStatement refereesPs = connection.prepareStatement(refereesSql);
+            refereesPs.setString(1, id);
+            ResultSet refereesRs = refereesPs.executeQuery();
+            List<Member> refereesList = new ArrayList<>();
+            while (refereesRs.next()) {
+                String refereeId = refereesRs.getString("id_member_referer");
+                findById(refereeId).ifPresent(refereesList::add);
+            }
+            member.setReferees(refereesList);
+
             if (memberRs.next()) {
                 member.setId(id);
                 member.setFirstName(memberRs.getString("firstname"));
