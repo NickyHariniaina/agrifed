@@ -108,7 +108,8 @@ public class CollectivityActivityService {
 
     private void validateActivityDto(CreateCollectivityActivityDto dto) {
         boolean hasExecutiveDate = dto.getExecutiveDate() != null;
-        boolean hasRecurrence = dto.getRecurrenceWeekOrdinal() != null || dto.getRecurrenceDayOfWeek() != null;
+        boolean hasRecurrence = dto.getRecurrenceRule() != null
+                && (dto.getRecurrenceRule().getWeekOrdinal() != null || dto.getRecurrenceRule().getDayOfWeek() != null);
 
         if (hasExecutiveDate && hasRecurrence) {
             throw new BadRequestException(
@@ -119,11 +120,11 @@ public class CollectivityActivityService {
                     "Either executive date or recurrence rule must be provided.");
         }
         if (hasRecurrence) {
-            if (dto.getRecurrenceWeekOrdinal() == null || dto.getRecurrenceDayOfWeek() == null) {
+            if (dto.getRecurrenceRule().getWeekOrdinal() == null || dto.getRecurrenceRule().getDayOfWeek() == null) {
                 throw new BadRequestException(
                         "Both recurrence week ordinal and day of week must be provided together.");
             }
-            if (dto.getRecurrenceWeekOrdinal() < 1 || dto.getRecurrenceWeekOrdinal() > 5) {
+            if (dto.getRecurrenceRule().getWeekOrdinal() < 1 || dto.getRecurrenceRule().getWeekOrdinal() > 5) {
                 throw new BadRequestException(
                         "Recurrence week ordinal must be between 1 and 5.");
             }

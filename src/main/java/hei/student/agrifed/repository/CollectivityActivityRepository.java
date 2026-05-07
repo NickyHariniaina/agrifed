@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import hei.student.agrifed.entity.ActivityMemberAttendance;
 import hei.student.agrifed.entity.CollectivityActivity;
+import hei.student.agrifed.entity.MonthlyRecurrenceRule;
 import hei.student.agrifed.entity.dto.ActivityMemberAttendanceDto;
 import hei.student.agrifed.entity.dto.MemberDescriptionDto;
 import hei.student.agrifed.entity.enums.ActivityType;
@@ -47,13 +48,13 @@ public class CollectivityActivityRepository {
             } else {
                 ps.setNull(4, Types.DATE);
             }
-            if (activity.getRecurrenceWeekOrdinal() != null) {
-                ps.setInt(5, activity.getRecurrenceWeekOrdinal());
+            if (activity.getRecurrenceRule() != null && activity.getRecurrenceRule().getWeekOrdinal() != null) {
+                ps.setInt(5, activity.getRecurrenceRule().getWeekOrdinal());
             } else {
                 ps.setNull(5, Types.INTEGER);
             }
-            if (activity.getRecurrenceDayOfWeek() != null) {
-                ps.setString(6, activity.getRecurrenceDayOfWeek().name());
+            if (activity.getRecurrenceRule() != null && activity.getRecurrenceRule().getDayOfWeek() != null) {
+                ps.setString(6, activity.getRecurrenceRule().getDayOfWeek().name());
             } else {
                 ps.setNull(6, Types.VARCHAR);
             }
@@ -230,6 +231,14 @@ INSERT INTO activity_member_attendance (id_activity, id_member, attendance_statu
                     .collect(Collectors.toList());
         }
 
+        MonthlyRecurrenceRule recurrenceRule = rs.getObject("recurrence_week_ordinal", Integer.class) != null
+                ? MonthlyRecurrenceRule.builder()
+                    .weekOrdinal(rs.getObject("recurrence_week_ordinal", Integer.class))
+                    .dayOfWeek(rs.getString("recurrence_day_of_week") != null
+                        ? DayOfWeek.valueOf(rs.getString("recurrence_day_of_week")) : null)
+                    .build()
+                : null;
+
         return CollectivityActivity.builder()
                 .id(rs.getString("id"))
                 .idCollectivity(rs.getString("id_collectivity"))
@@ -237,9 +246,7 @@ INSERT INTO activity_member_attendance (id_activity, id_member, attendance_statu
                 .activityType(ActivityType.valueOf(rs.getString("activity_type")))
                 .executiveDate(rs.getDate("executive_date") != null
                         ? rs.getDate("executive_date").toLocalDate() : null)
-                .recurrenceWeekOrdinal(rs.getObject("recurrence_week_ordinal", Integer.class))
-                .recurrenceDayOfWeek(rs.getString("recurrence_day_of_week") != null
-                        ? DayOfWeek.valueOf(rs.getString("recurrence_day_of_week")) : null)
+                .recurrenceRule(recurrenceRule)
                 .memberOccupationConcerned(occupations)
                 .build();
     }
