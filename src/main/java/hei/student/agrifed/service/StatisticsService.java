@@ -54,6 +54,7 @@ public class StatisticsService {
             dto.setCollectivityInformation(identity);
             dto.setNewMembersNumber(stat.getNewMembersNumber());
             dto.setOverallMemberCurrentDuePercentage(stat.getOverallMemberCurrentDuePercentage());
+            dto.setOverallMemberAssiduityPercentage(stat.getOverallMemberAssiduityPercentage());
 
             result.add(dto);
         }
