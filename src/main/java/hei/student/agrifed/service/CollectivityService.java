@@ -1,0 +1,243 @@
+package hei.student.agrifed.service;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import hei.student.agrifed.entity.BankAccount;
+import hei.student.agrifed.entity.CashAccount;
+import hei.student.agrifed.entity.Collectivity;
+import hei.student.agrifed.entity.CollectivityTransaction;
+import hei.student.agrifed.entity.FinancialAccount;
+import hei.student.agrifed.entity.MembershipFee;
+import hei.student.agrifed.entity.MobileBankingAccount;
+import hei.student.agrifed.entity.dto.AssignIdentityDto;
+import hei.student.agrifed.entity.dto.CollectivityLocalStatisticsDto;
+import hei.student.agrifed.entity.dto.CreateCollectivityDto;
+import hei.student.agrifed.entity.dto.CreateCollectivityStructureDto;
+import hei.student.agrifed.entity.dto.CreateMembershipFeeDto;
+import hei.student.agrifed.exception.BadRequestException;
+import hei.student.agrifed.exception.ConflictException;
+import hei.student.agrifed.exception.NotFoundException;
+import hei.student.agrifed.repository.CollectivityRepository;
+import hei.student.agrifed.repository.MemberRepository;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class CollectivityService {
+
+    private static final int MINIMUM_MEMBERS        = 10;
+    private static final int MINIMUM_SENIOR_MEMBERS = 5;
+
+    private final CollectivityRepository collectivityRepository;
+    private final MemberRepository memberRepository;
+
+    public CollectivityService(CollectivityRepository collectivityRepository,
+                               MemberRepository memberRepository) {
+        this.collectivityRepository = collectivityRepository;
+        this.memberRepository = memberRepository;
+    }
+
+    public List<Collectivity> createCollectivities(List<CreateCollectivityDto> dtos) {
+        List<Collectivity> created = new ArrayList<>();
+        for (CreateCollectivityDto dto : dtos) {
+            created.add(createOne(dto));
+        }
+        return created;
+    }
+
+    private Collectivity createOne(CreateCollectivityDto dto) {
+        if (!Boolean.TRUE.equals(dto.getFederationApproval())) {
+            throw new BadRequestException(
+                    "Approval from federation is required");
+        }
+
+        CreateCollectivityStructureDto s = dto.getStructure();
+        if (s == null || s.getPresident() == null || s.getVicePresident() == null
+                || s.getTreasurer() == null || s.getSecretary() == null) {
+            throw new BadRequestException(
+                    "Structure incomplete : president, vice-president, treasury and secretary is obligatory.");
+        }
+
+        // Fusion members + structure (role count in the 10 effectif
+        List<String> allMemberIds = mergeWithStructureMembers(dto);
+        dto.setMembers(allMemberIds);
+
+        for (String id : allMemberIds) {
+            memberRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("Membre introuvable avec l'id : " + id));
+        }
+
+        if (allMemberIds.size() < MINIMUM_MEMBERS) {
+            throw new BadRequestException(
+                    "A collectivity got to hava at least : " + MINIMUM_MEMBERS + " members.");
+        }
+
+        long seniorCount = collectivityRepository.countSeniorMembers(allMemberIds);
+        if (seniorCount < MINIMUM_SENIOR_MEMBERS) {
+            throw new BadRequestException(
+                    "At leat " + MINIMUM_SENIOR_MEMBERS
+                            + " members got to have ≥ 6 months ancientness (actual : " + seniorCount + ").");
+        }
+
+        return collectivityRepository.save(dto);
+    }
+
+    private List<String> mergeWithStructureMembers(CreateCollectivityDto dto) {
+        Set<String> merged = new LinkedHashSet<>();
+        if (dto.getMembers() != null) merged.addAll(dto.getMembers());
+        CreateCollectivityStructureDto s = dto.getStructure();
+        merged.add(s.getPresident());
+        merged.add(s.getVicePresident());
+        merged.add(s.getTreasurer());
+        merged.add(s.getSecretary());
+        return new ArrayList<>(merged);
+    }
+
+
+    public Collectivity assignIdentity(String id, AssignIdentityDto dto) {
+        if (dto == null || (dto.getNumber() == null && dto.getName() == null)) {
+            throw new BadRequestException(
+                    "At least number or name must be provided.");
+
+        }
+
+        Collectivity existing = collectivityRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Community not found with ID : " + id));
+
+        if (dto.getNumber() != null && existing.getNumber() != null) {
+            throw new ConflictException(
+                    "The federal number is already defined and cannot be changed.");
+        }
+        if (dto.getName() != null && existing.getName() != null) {
+            throw new ConflictException(
+                    "The name is already defined and cannot be changed.");
+        }
+
+        if (dto.getName() != null && collectivityRepository.existsByName(dto.getName())) {
+            throw new ConflictException(
+                    "Name '" + dto.getName() + "' is already in use by another collectivity.");
+        }
+
+        return collectivityRepository.assignIdentity(id, dto.getNumber(), dto.getName());
+    }
+
+    public List<MembershipFee> findMembershipFeesById(String id) {
+        if (!collectivityRepository.existsById(id)) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
+        return collectivityRepository.findMembershipFeesById(id);
+    }
+
+    public List<MembershipFee> saveMembershipFees(String id, List<CreateMembershipFeeDto> createMembershipFeeDtos) {
+        if (!collectivityRepository.existsById(id)) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
+        List<MembershipFee> memberFeesCreated = new ArrayList<>();
+        for (CreateMembershipFeeDto createMembershipFeeDto : createMembershipFeeDtos) {
+            MembershipFee memberFee = createMembershipFeeDto.toMembershipFee();
+            memberFeesCreated.add(collectivityRepository.saveMembershipFee(id, memberFee));
+
+        }
+        return memberFeesCreated;
+    }
+
+    public List<CollectivityTransaction> findTransactions(String id, String fromStr, String toStr) {
+        if (fromStr == null || toStr == null)
+            throw new BadRequestException("Query parameters 'from' and 'to' are mandatory.");
+
+        LocalDate from;
+        LocalDate to;
+        try {
+            from = LocalDate.parse(fromStr);
+            to   = LocalDate.parse(toStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-01-01).");
+        }
+
+        if (from.isAfter(to))
+            throw new BadRequestException("'from' date must be before or equal to 'to' date.");
+
+        if (!collectivityRepository.existsById(id))
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+
+        return collectivityRepository.findTransactions(id, from, to);
+    }
+
+    public Collectivity findCollectivityById(String id) {
+        return collectivityRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Collectivity not found with ID : " + id));
+    }
+
+    public List<FinancialAccount> findFinancialAccounts(String id, String atStr) {
+
+        LocalDate at;
+        if (atStr == null) {
+            at = LocalDate.now();
+        } else {
+            try {
+                at = LocalDate.parse(atStr);
+            } catch (DateTimeParseException e) {
+                throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-04-23).");
+            }
+        }
+
+        if (!collectivityRepository.existsById(id))
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+
+        List<String> accountIds = collectivityRepository.findDistinctAccountIdsByCollectivity(id);
+
+        List<FinancialAccount> result = new ArrayList<>();
+
+        for (String accountId : accountIds) {
+
+            FinancialAccount account = collectivityRepository
+                    .findFinancialAccountById(accountId)
+                    .orElse(null);
+
+            if (account == null) continue;
+
+            Double balance = collectivityRepository.sumTransactionAmountByAccountAt(id, accountId, at);
+            if (account instanceof CashAccount) {
+                ((CashAccount) account).setAmount(balance.intValue());
+            } else if (account instanceof MobileBankingAccount) {
+                ((MobileBankingAccount) account).setAmount(balance);
+            } else if (account instanceof BankAccount) {
+                ((BankAccount) account).setAmount(balance);
+            }
+
+            result.add(account);
+        }
+
+        return result;
+    }
+
+    public List<CollectivityLocalStatisticsDto> getStatistics(String id, String fromStr, String toStr) {
+        if (fromStr == null || toStr == null) {
+            throw new BadRequestException("Query parameters 'from' and 'to' are mandatory.");
+        }
+
+        LocalDate from;
+        LocalDate to;
+        try {
+            from = LocalDate.parse(fromStr);
+            to = LocalDate.parse(toStr);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Date format must be yyyy-MM-dd (ex: 2026-01-01).");
+        }
+
+        if (from.isAfter(to)) {
+            throw new BadRequestException("'from' date must be before or equal to 'to' date.");
+        }
+
+        if (!collectivityRepository.existsById(id)) {
+            throw new NotFoundException("Collectivity not found with ID : " + id);
+        }
+
+        return collectivityRepository.findStatistics(id, from, to);
+    }
+}

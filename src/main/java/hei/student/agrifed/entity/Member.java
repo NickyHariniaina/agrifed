@@ -1,0 +1,34 @@
+package hei.student.agrifed.entity;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import hei.student.agrifed.entity.enums.Gender;
+import hei.student.agrifed.entity.enums.MemberOccupation;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class Member {
+    private String id;
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private Gender gender;
+    private String address;
+    private String profession;
+    private Integer phoneNumber;
+    private String email;
+    private MemberOccupation occupation;
+    private List<Member> referees = new ArrayList<>();
+    private List<String> refereesIds = new ArrayList<>();
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private LocalDate joinedAt;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String collectivityIdentifier;
+}
