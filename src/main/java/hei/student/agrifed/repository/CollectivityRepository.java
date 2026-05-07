@@ -21,10 +21,12 @@ public class CollectivityRepository {
 
     private final Connection connection;
     private final MemberRepository memberRepository;
+    private final CollectivityActivityRepository collectivityActivityRepository;
 
-    public CollectivityRepository(Connection connection, MemberRepository memberRepository) {
+    public CollectivityRepository(Connection connection, MemberRepository memberRepository, CollectivityActivityRepository collectivityActivityRepository) {
         this.connection = connection;
         this.memberRepository = memberRepository;
+        this.collectivityActivityRepository = collectivityActivityRepository;
     }
 
 
@@ -144,7 +146,6 @@ PreparedStatement ps = connection.prepareStatement(sql);
             c.setName(rs.getString("name"));
             c.setLocation(rs.getString("location"));
 
-            // Structure
             CollectivityStructure structure = new CollectivityStructure(
                     fetchMember(rs.getString("president_id"),      "Président"),
                     fetchMember(rs.getString("vice_president_id"), "Vice-president"),
@@ -153,7 +154,6 @@ PreparedStatement ps = connection.prepareStatement(sql);
             );
             c.setStructure(structure);
 
-            // Membres
             c.setMembers(findMembersByCollectivityId(id));
             return Optional.of(c);
         } catch (SQLException e) {
@@ -519,6 +519,10 @@ PreparedStatement ps = connection.prepareStatement(sql);
                 stat.setMemberDescription(memberDesc);
                 stat.setEarnedAmount(rs.getDouble("earned_amount"));
                 stat.setUnpaidAmount(rs.getDouble("unpaid_amount"));
+
+                double assiduity = collectivityActivityRepository
+                        .getAssiduityPercentageForMember(collectivityId, rs.getString("id"), from, to);
+                stat.setAssiduityPercentage(assiduity);
 
                 results.add(stat);
             }
