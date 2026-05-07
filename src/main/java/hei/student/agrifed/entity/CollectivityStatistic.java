@@ -13,4 +13,5 @@ public class CollectivityStatistic {
     private String id;
     private Integer newMembersNumber;
     private Double overallMemberCurrentDuePercentage;
+    private Double overallMemberAssiduityPercentage;
 }
