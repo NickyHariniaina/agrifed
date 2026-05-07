@@ -167,11 +167,11 @@ INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_accou
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
 ('col-1', 'C1-M7', 'C1-A-MOBILE-1', 100000, 'MOBILE_BANKING', '2026-01-01');
 
--- C1-M8 pays 60000 to C1-A-MOBILE-1 (MOBILE_BANKING)
+-- C1-M8 pays 70000 to C1-A-MOBILE-1 (MOBILE_BANKING)
 INSERT INTO member_payment (id, id_member, id_membership_fee, id_financial_account, amount, payment_mode, creation_date) VALUES
-('pay-C1-M8-1', 'C1-M8', 'cot-1', 'C1-A-MOBILE-1', 60000, 'MOBILE_BANKING', '2026-01-01');
+('pay-C1-M8-1', 'C1-M8', 'cot-1', 'C1-A-MOBILE-1', 70000, 'MOBILE_BANKING', '2026-01-01');
 INSERT INTO collectivity_transaction (id_collectivity, id_member, id_financial_account, amount, payment_mode, creation_date) VALUES
-('col-1', 'C1-M8', 'C1-A-MOBILE-1', 60000, 'MOBILE_BANKING', '2026-01-01');
+('col-1', 'C1-M8', 'C1-A-MOBILE-1', 70000, 'MOBILE_BANKING', '2026-01-01');
 
 -- Member Payments and Transactions for Collectivity 2 (2026-01-01)
 -- C1-M1 (same as C2-M1) pays 60000 to C2-A-CASH (CASH)

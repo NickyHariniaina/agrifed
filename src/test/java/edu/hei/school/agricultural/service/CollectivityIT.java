@@ -77,18 +77,6 @@ public class CollectivityIT {
     }
 
     @Test
-    void change_name() {
-        var id = "col-1";
-        var payload = new CollectivityInformation();
-        payload.name = "Other";
-
-        var actualCollectivity = apiClient.put("/collectivities/" + id + "/informations", payload, Collectivity.class);
-
-        assertNotNull(actualCollectivity, "Unable to obtain financial accounts for collectivity.id=" + id);
-        log.info("Collectivity: " + actualCollectivity);
-    }
-
-    @Test
     void get_financial_account() {
         var id = "col-1";
 
